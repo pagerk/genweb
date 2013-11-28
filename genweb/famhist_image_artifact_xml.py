@@ -208,7 +208,7 @@ def build_inline_txt(*args):
 def create_entry(*args):
     pass
 
-if __name__ == '__main__':
+def main():
     root = Tk()
     root.title("Family History: Enter a Person")
 
@@ -525,3 +525,7 @@ if __name__ == '__main__':
         child.grid_configure(padx=2, pady=2)
 
     root.mainloop()
+
+
+if __name__ == '__main__':
+    main()

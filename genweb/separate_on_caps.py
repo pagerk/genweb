@@ -12,9 +12,12 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
-def separate_on_caps(item):
-    import string
 
+def separate_on_caps(item):
+    """
+    >>> separate_on_caps("HelloWorld")
+    ['Hello', 'World']
+    """
     item_length = len(item)
     last_char = item_length - 1
 
@@ -42,9 +45,7 @@ def separate_on_caps(item):
 
     return name
 
+
 if __name__ == '__main__':
-    import string
-    cat_string = 'initialize'
-    while len(cat_string) > 0:
-        cat_string = input('enter the test string')
-        #print(' separated string = ', separate_on_caps(cat_string))
+    import doctest
+    print doctest.testmod()

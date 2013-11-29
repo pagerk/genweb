@@ -236,10 +236,8 @@ def personString(person):
     result= " ".join((person['Surname'],person['Given'],birthYear))
     return result.encode('utf8')
 
+
 if __name__ == "__main__":
-    import sys
-    import pprint
-    import traceback
     connection= sqlite3.connect('TestDatabase.rmgc')
     #connection= sqlite3.connect('myfamily.rmgc')
     cursor= connection.cursor()

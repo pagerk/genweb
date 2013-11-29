@@ -17,10 +17,15 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
+import os
+import logging
+
+
+_moduleLogger = logging.getLogger(__name__)
+
+
 def get_files_in_folder(pathString):
    """creates a list of files in the specified folder"""
-   import string
-   import os
 
    args = os.listdir(pathString)
    files = []
@@ -36,10 +41,6 @@ def get_files_in_folder(pathString):
 def rename_files_in_folder(pathString,find_str,replace_str,file_ext):
     """renames all files in specified folder that match the source string
         and extension"""
-    import string
-    import os
-    import sys
-
     files = get_files_in_folder(pathString)
 
     for file_name in files:
@@ -56,8 +57,6 @@ def rename_files_in_folder(pathString,find_str,replace_str,file_ext):
 
 def get_folders_in_folder(pathString):
    """creates a list of folders in the specified folder"""
-   import string
-   import os
    args = os.listdir(pathString)
    folders = []
    for a in args:
@@ -68,9 +67,6 @@ def get_folders_in_folder(pathString):
    return folders
 
 def get_folder_file_contents(folder_path,extension):
-    import string
-    import os
-
     folder_files = get_files_in_folder(folder_path)
     file_contents = []
     # Loop through the file names in the current subfolder.

@@ -12,15 +12,9 @@
 from tkinter import *
 from tkinter import ttk
 from datetime import *
-import sys
-import pprint
-sys.path.append('C:/Users/pagerk/PyScripter_Workspace/Python3Scripts')
-sys.path.append('C:/Users/pagerk/PyScripter_Workspace/Python3Scripts/MyLib')
-import os
-import string
-from file_folder_ops import get_folders_in_folder
-from file_ops import separate_strings_on_char
+
 from build_family_from_rm import *
+
 
 # Get the RootsMagic database info
 rm_db = 'C:\\Dropbox\\RootsMagic Database\\myfamily.rmgc'
@@ -57,7 +51,6 @@ def search_for_matches(*args):
 
 
 def view_possible_person(*args):
-    import pprint
     global person_no
 
     # identify the target person

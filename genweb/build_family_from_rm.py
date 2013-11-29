@@ -12,7 +12,12 @@
 # Licence:     <your licence>
 #------------------------------------------------------------------------------
 
+import sqlite3
+import pickle
 import logging
+
+import metaphone
+
 
 
 def fetch_rm_tables(rm_db):
@@ -121,8 +126,6 @@ def fetch_person_from_name(name_table, name_dict):
         entry for that person. If there is more than one match,
         they will all be returned
     """
-    import string
-
     person = {}
     person_matches = []
     for person in name_table:
@@ -153,16 +156,13 @@ def fetch_person_from_fuzzy_name(name_table, name_dict, year_error=2):
         entry for that person. If there is more than one match,
         they will all be returned
     """
-    import string
-    from metaphone import dm
-
     person = {}
     person_matches = []
     for person in name_table:
-        person_sur = dm(person['Surname'].replace(' ', ''))[0]
-        name_dict_sur = dm(name_dict['Surname'])[0]
-        person_given = dm(person['Given'][0])[0]
-        name_dict_given = dm(name_dict['Given'])[0]
+        person_sur = metaphone.dm(person['Surname'].replace(' ', ''))[0]
+        name_dict_sur = metaphone.dm(name_dict['Surname'])[0]
+        person_given = metaphone.dm(person['Given'][0])[0]
+        name_dict_given = metaphone.dm(name_dict['Given'])[0]
         birth_error = abs(int(person['BirthYear']) -
                           int(name_dict['BirthYear']))
         if person_sur == name_dict_sur\
@@ -242,8 +242,6 @@ def fetch_spouses_from_ID(name_table, person_table, family_table, person_ID):
         2. fetch the spouse IDs from the family_table
         3. using the spouse IDs fetch the spouse(s) info from the NameTable
     """
-    import string
-
     male = '0'
     female = '1'
     spouses = []
@@ -282,8 +280,6 @@ def fetch_children_from_ID(child_table, name_table, person_table,
         4. Using the ChildID as the OwnerID get each child's info from
             NameTable
     """
-    import string
-
     male = '0'
     female = '1'
     children = []

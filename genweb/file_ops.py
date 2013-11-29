@@ -20,9 +20,8 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
+
 def srch_and_replace(folder_path, file, search_string,replace_string):
-    import string
-    import os
 
     with open(folder_path + '/' + file, 'r') as f:
         # create a list of the file contents
@@ -45,8 +44,6 @@ def srch_and_replace(folder_path, file, search_string,replace_string):
     return
 
 def separate_strings_on_char(semicolon_separated_strings, separation_character):
-    import string
-
     list_of_strings = []
     semicolon_count = semicolon_separated_strings.count(separation_character)
     for i in range(semicolon_count + 1):
@@ -59,8 +56,6 @@ def separate_strings_on_char(semicolon_separated_strings, separation_character):
     return list_of_strings
 
 def separate_on_caps(item):
-    import string
-
     item_length = len(item)
     last_char = item_length - 1
 
@@ -88,9 +83,8 @@ def separate_on_caps(item):
 
     return name
 
-#
+
 if __name__ == "__main__":
-    import sys
     folder_path = 'D:\Family History\Family History CD\Research\Individual Web Pages\TOCxml'
     file = 'aaa_test_Search_and_replace.xml'
     search_string = 'Abdill, Hanrvey'

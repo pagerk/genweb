@@ -134,7 +134,7 @@ class Editor(object):
             grid(column=11, row=current_row, sticky=EW, columnspan=5)
 
         current_row = 2
-        ttk.Button(mainframe, text="Search", command=self._search_for_matches).\
+        ttk.Button(mainframe, text="Search", command=self._on_search_for_matches).\
             grid(column=1, row=2, sticky=W, columnspan=1, rowspan=1)
         ttk.Entry(mainframe, width=7, textvariable=self._srch_person["Given"]).\
             grid(column=3, row=current_row, sticky=(W, E), columnspan=1)
@@ -149,7 +149,7 @@ class Editor(object):
 
         current_row = 4
         ttk.Button(mainframe, text="View\nPossible\nMatch",
-                command=self._view_possible_person).\
+                command=self._on_view_possible_person).\
             grid(column=1, row=current_row, sticky=W, columnspan=1, rowspan=3)
         ttk.Radiobutton(mainframe, text='', variable=self._selected_person, value='0').\
             grid(column=2, row=current_row, sticky=EW)
@@ -195,7 +195,7 @@ class Editor(object):
 
         current_row = 7
         ttk.Button(mainframe, text="Add to\nPeople\nReferenced",
-                command=self._add_to_people_ref).\
+                command=self._on_add_to_people_ref).\
             grid(column=1, row=current_row, sticky=W, columnspan=1, rowspan=3)
         ttk.Radiobutton(mainframe, text='', variable=self._selected_person, value='3').\
             grid(column=2, row=current_row, sticky=EW)
@@ -327,13 +327,13 @@ class Editor(object):
             grid(column=3, row=current_row, columnspan="3", sticky=EW)
 
         current_row = 37
-        ttk.Button(mainframe, text="Image\nReference", command=self._build_image_ref).\
+        ttk.Button(mainframe, text="Image\nReference", command=self._on_build_image_ref).\
             grid(column=3, row=current_row, sticky=W,
                 columnspan=1, rowspan=1)
-        ttk.Button(mainframe, text="Inline\nText", command=self._build_inline_txt).\
+        ttk.Button(mainframe, text="Inline\nText", command=self._on_build_inline_txt).\
             grid(column=4, row=current_row, sticky=W,
                 columnspan=1, rowspan=1)
-        ttk.Button(mainframe, text="External\nhtml", command=self._build_ext_html).\
+        ttk.Button(mainframe, text="External\nhtml", command=self._on_build_ext_html).\
             grid(column=5, row=current_row, sticky=W,
                 columnspan=1, rowspan=1)
 
@@ -345,7 +345,7 @@ class Editor(object):
     def mainloop(self):
         self._root.mainloop()
 
-    def _search_for_matches(self, *args):
+    def _on_search_for_matches(self, *args):
         given_name_value = str(self._srch_person["Given"].get())
         surname_value = str(self._srch_person["Surname"].get())
         birthyear_value = str(self._srch_person["BirthYear"].get())
@@ -368,7 +368,7 @@ class Editor(object):
                 match[number]["Surname"].set(str(self._persons[number]["Surname"]))
                 match[number]["BirthYear"].set(str(self._persons[number]["BirthYear"]))
 
-    def _view_possible_person(self, *args):
+    def _on_view_possible_person(self, *args):
         # identify the target person
         person_no = int(self._selected_person.get())
 
@@ -472,19 +472,19 @@ class Editor(object):
                 set(str(children[child_no]["OwnerID"]))
 
 
-    def _build_image_ref(self, *args):
+    def _on_build_image_ref(self, *args):
         raise NotImplementedError("TODO")
 
 
-    def _add_to_people_ref(self, *args):
+    def _on_add_to_people_ref(self, *args):
         raise NotImplementedError("TODO")
 
 
-    def _build_ext_html():
+    def _on_build_ext_html():
         raise NotImplementedError("TODO")
 
 
-    def _build_inline_txt(*args):
+    def _on_build_inline_txt(*args):
         # Set the file generation labels
         self._file_gen["Header"].set('Inline Text')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')

@@ -4,7 +4,7 @@ from __future__ import with_statement
 
 import sys
 import re
-import cPickle
+import pickle
 
 import functools
 import contextlib
@@ -13,7 +13,6 @@ import inspect
 import optparse
 import traceback
 import warnings
-import string
 
 
 class AnyData(object):
@@ -60,22 +59,6 @@ def log_exception(logger):
 	return log_exception_decorator
 
 
-def printfmt(template):
-	"""
-	This hides having to create the Template object and call substitute/safe_substitute on it. For example:
-
-	>>> num = 10
-	>>> word = "spam"
-	>>> printfmt("I would like to order $num units of $word, please") #doctest: +SKIP
-	I would like to order 10 units of spam, please
-	"""
-	frame = inspect.stack()[-1][0]
-	try:
-		print string.Template(template).safe_substitute(frame.f_locals)
-	finally:
-		del frame
-
-
 def is_special(name):
 	return name.startswith("__") and name.endswith("__")
 
@@ -94,19 +77,19 @@ def privatize(clsName, attributeName):
 	...
 	>>> try:
 	... 	dir(Test).index("_Test__me")
-	... 	print dir(Test)
+	... 	print()
 	... except:
-	... 	print "Not Found"
+	... 	print()
 	Not Found
 	>>> setattr(Test, privatize(Test.__name__, "me"), "Hello World")
 	>>> try:
 	... 	dir(Test).index("_Test__me")
-	... 	print "Found"
+	... 	print()
 	... except:
-	... 	print dir(Test)
+	... 	print()
 	0
 	Found
-	>>> print getattr(Test, obfuscate(Test.__name__, "__me"))
+	>>> print()
 	Hello World
 	>>>
 	>>> is_private(privatize(Test.__name__, "me"))
@@ -127,12 +110,12 @@ def obfuscate(clsName, attributeName):
 	...
 	>>> try:
 	... 	dir(Test).index("_Test__me")
-	... 	print "Found"
+	... 	print()
 	... except:
-	... 	print dir(Test)
+	... 	print()
 	0
 	Found
-	>>> print getattr(Test, obfuscate(Test.__name__, "__me"))
+	>>> print()
 	Hello World
 	>>> is_private(obfuscate(Test.__name__, "__me"))
 	True
@@ -152,7 +135,7 @@ class PAOptionParser(optparse.OptionParser, object):
 	... 	parser.add_posarg("Language", dest='tr_type', type="choice", choices=("Python", "Other"))
 	... 	parser.add_option('--stocksym', dest='symbol')
 	... 	values, args = parser.parse_args()
-	... 	print values, args
+	... 	print()
 	...
 
 	python mycp.py  -h
@@ -251,15 +234,15 @@ def validate_decorator(decorator):
 	g = decorator(f)
 
 	if f.__name__ != g.__name__:
-		print f.__name__, "!=", g.__name__
+		print()
 
 	if g.__doc__ is None:
-		print decorator.__name__, "has no doc string"
+		print()
 	elif not g.__doc__.startswith(f.__doc__):
-		print g.__doc__, "didn't start with", f.__doc__
+		print()
 
 	if not ("member" in g.__dict__ and g.__dict__["member"]):
-		print "'member' not in ", g.__dict__
+		print()
 
 
 def deprecated_api(func):
@@ -355,17 +338,17 @@ def prop(func):
 	...	def foo():
 	...		"The foo property attribute's doc-string"
 	...		def fget(self):
-	...			print "GET"
+	...			print()
 	...			return self._foo
 	...		def fset(self, value):
-	...			print "SET"
+	...			print()
 	...			self._foo = value
 	...		return locals()
 	...
 	>>> me = MyExampleClass()
 	>>> me.foo = 10
 	SET
-	>>> print me.foo
+	>>> print()
 	GET
 	10
 	"""
@@ -376,21 +359,21 @@ def print_handler(e):
 	"""
 	@see ExpHandler
 	"""
-	print "%s: %s" % (type(e).__name__, e)
+	print()
 
 
 def print_ignore(e):
 	"""
 	@see ExpHandler
 	"""
-	print 'Ignoring %s exception: %s' % (type(e).__name__, e)
+	print()
 
 
 def print_traceback(e):
 	"""
 	@see ExpHandler
 	"""
-	#print sys.exc_info()
+	#print()
 	traceback.print_exc(file=sys.stdout)
 
 
@@ -447,7 +430,7 @@ def ExpHandler(handler = print_handler, *exceptions):
 					dec_func = functools.partial(newfunc, t[1:])
 					dec_func = functools.update_wrapper(dec_func, f)
 					return dec_func(*args, **kwargs)
-			except ex, e:
+			except ex as e:
 				return handler(e)
 
 		dec_func = functools.partial(newfunc, t)
@@ -590,7 +573,7 @@ class MemoizeMutable(object):
 		self.memo = {}
 
 	def __call__(self, *args, **kw):
-		text = cPickle.dumps((args, kw))
+		text = pickle.dumps((args, kw))
 		if text not in self.memo:
 			self.memo[text] = self.fn(*args, **kw)
 		return self.memo[text]
@@ -616,32 +599,32 @@ def call_trace(f):
 	def verboseTrace(*args, **kw):
 		global callTraceIndentationLevel
 
-		print "%sEntering %s(%s, %s)" % ("\t"*callTraceIndentationLevel, f.__name__, args, kw)
+		print()
 		callTraceIndentationLevel += 1
 		try:
 			result = f(*args, **kw)
 		except:
 			callTraceIndentationLevel -= 1
-			print "%sException %s(%s, %s)" % ("\t"*callTraceIndentationLevel, f.__name__, args, kw)
+			print()
 			raise
 		callTraceIndentationLevel -= 1
-		print "%sExiting %s(%s, %s)" % ("\t"*callTraceIndentationLevel, f.__name__, args, kw)
+		print()
 		return result
 
 	@functools.wraps(f)
 	def smallTrace(*args, **kw):
 		global callTraceIndentationLevel
 
-		print "%sEntering %s" % ("\t"*callTraceIndentationLevel, f.__name__)
+		print()
 		callTraceIndentationLevel += 1
 		try:
 			result = f(*args, **kw)
 		except:
 			callTraceIndentationLevel -= 1
-			print "%sException %s" % ("\t"*callTraceIndentationLevel, f.__name__)
+			print()
 			raise
 		callTraceIndentationLevel -= 1
-		print "%sExiting %s" % ("\t"*callTraceIndentationLevel, f.__name__)
+		print()
 		return result
 
 	#return smallTrace
@@ -653,12 +636,12 @@ def nested_break():
 	"""
 	>>> with nested_break() as mylabel:
 	... 	for i in xrange(3):
-	... 		print "Outer", i
+	... 		print()
 	... 		for j in xrange(3):
 	... 			if i == 2: raise mylabel
 	... 			if j == 2: break
-	... 			print "Inner", j
-	... 		print "more processing"
+	... 			print()
+	... 		print()
 	Outer 0
 	Inner 0
 	Inner 1
@@ -684,11 +667,11 @@ def lexical_scope(*args):
 	Example:
 	>>> b = 0
 	>>> with lexical_scope(1) as (a):
-	... 	print a
+	... 	print()
 	...
 	1
 	>>> with lexical_scope(1,2,3) as (a,b,c):
-	... 	print a,b,c
+	... 	print()
 	...
 	1 2 3
 	>>> with lexical_scope():
@@ -696,7 +679,7 @@ def lexical_scope(*args):
 	... 	def foo():
 	... 		pass
 	...
-	>>> print b
+	>>> print()
 	2
 	"""
 

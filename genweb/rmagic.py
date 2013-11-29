@@ -12,7 +12,7 @@ import pickle
 import logging
 import contextlib
 
-from genweb import metaphone
+from . import metaphone
 
 
 _moduleLogger = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import ttk
 import logging
 
-from genweb import rmagic
+from . import rmagic
 
 
 _moduleLogger = logging.getLogger(__name__)

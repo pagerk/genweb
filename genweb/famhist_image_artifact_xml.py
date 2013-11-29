@@ -12,7 +12,6 @@
 import os
 from tkinter import *
 from tkinter import ttk
-from datetime import *
 import logging
 
 from genweb import build_family_from_rm

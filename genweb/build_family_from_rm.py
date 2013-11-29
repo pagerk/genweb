@@ -19,6 +19,8 @@ import logging
 import metaphone
 
 
+_moduleLogger = logging.getLogger(__name__)
+
 
 def fetch_rm_tables(rm_db):
     """Read the RootsMagic database table and return
@@ -27,88 +29,62 @@ def fetch_rm_tables(rm_db):
         where each table is a list of the table rows
         where each row is a dict for that row.
     """
-    import sys
-    sys.path.append('C:\\Users\\pagerk\\PyScripter_Workspace\\Python3Scripts\\MyLib')
-    import os, time
-    import sqlite3
-    import pickle
-    from sqlite3_rm_tools import merge, fetchone, fetchall, loadfamily, \
-        personString
-    from separate_on_caps import separate_on_caps
-
-
     #f = open('pickle_rm_db.pkl', 'rb')
     #roots_magic_db = pickle.load(f)
 
-    try:
-        connection = sqlite3.connect(rm_db)
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        print('connection= sqlite3.connect(rm_db) where rm_db =', rm_db)
-        raise
+    connection = sqlite3.connect(rm_db)
+    cursor = connection.cursor()
 
-    try:
-        cursor = connection.cursor()
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        print('cursor= connection.cursor()')
-        raise
+    cursor.execute("SELECT OwnerID, Surname, Given, Prefix, Suffix, \
+                            Nickname, IsPrimary, BirthYear, DeathYear \
+                            FROM NameTable")
+    name_tab = cursor.fetchall()
 
-    try:
-        cursor.execute("SELECT OwnerID, Surname, Given, Prefix, Suffix, \
-                                Nickname, IsPrimary, BirthYear, DeathYear \
-                                FROM NameTable")
-        name_tab = cursor.fetchall()
+    # Process NameTable
+    name_dict = {}
+    name_table = []
+    for name in name_tab:
+        given = name[2].split(' ')
+        name_dict = {'OwnerID': str(name[0]), 'Surname': name[1],
+                        'Given': given, 'Prefix': name[3], 'Suffix': name[4],
+                        'Nickname': name[5], 'IsPrimary': str(name[6]),
+                        'BirthYear': str(name[7]), 'DeathYear': str(name[8])}
+        name_table.append(name_dict)
 
-        # Process NameTable
-        name_dict = {}
-        name_table = []
-        for name in name_tab:
-            given = name[2].split(' ')
-            name_dict = {'OwnerID': str(name[0]), 'Surname': name[1],
-                         'Given': given, 'Prefix': name[3], 'Suffix': name[4],
-                         'Nickname': name[5], 'IsPrimary': str(name[6]),
-                         'BirthYear': str(name[7]), 'DeathYear': str(name[8])}
-            name_table.append(name_dict)
+    # Process PersonTable
+    cursor.execute("SELECT PersonID,Sex,ParentID,\
+                    SpouseID FROM PersonTable")
+    person_tab = cursor.fetchall()
+    person_dict = {}
+    person_table = []
+    for person in person_tab:
+        person_dict = {'PersonID': str(person[0]), 'Sex': str(person[1]),
+                        'ParentID': str(person[2]),
+                        'SpouseID': str(person[3])}
+        person_table.append(person_dict)
 
-        # Process PersonTable
-        cursor.execute("SELECT PersonID,Sex,ParentID,\
-                        SpouseID FROM PersonTable")
-        person_tab = cursor.fetchall()
-        person_dict = {}
-        person_table = []
-        for person in person_tab:
-            person_dict = {'PersonID': str(person[0]), 'Sex': str(person[1]),
-                           'ParentID': str(person[2]),
-                           'SpouseID': str(person[3])}
-            person_table.append(person_dict)
+    # Process ChildTable
+    cursor.execute("SELECT ChildID,FamilyID,ChildOrder FROM ChildTable")
+    child_tab = cursor.fetchall()
+    child_dict = {}
+    child_table = []
+    for child in child_tab:
+        child_dict = {'ChildID': str(child[0]), 'FamilyID': str(child[1]),
+                        'ChildOrder': str(child[2])}
+        child_table.append(child_dict)
 
-        # Process ChildTable
-        cursor.execute("SELECT ChildID,FamilyID,ChildOrder FROM ChildTable")
-        child_tab = cursor.fetchall()
-        child_dict = {}
-        child_table = []
-        for child in child_tab:
-            child_dict = {'ChildID': str(child[0]), 'FamilyID': str(child[1]),
-                          'ChildOrder': str(child[2])}
-            child_table.append(child_dict)
-
-        # Process FamilyTable
-        cursor.execute("SELECT FamilyID,FatherID,MotherID,\
-                       ChildID FROM FamilyTable")
-        family_tab = cursor.fetchall()
-        family_dict = {}
-        family_table = []
-        for family in family_tab:
-            family_dict = {'FamilyID': str(family[0]),
-                           'FatherID': str(family[1]),
-                           'MotherID': str(family[2]),
-                           'ChildID': str(family[3])}
-            family_table.append(family_dict)
-
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        raise
+    # Process FamilyTable
+    cursor.execute("SELECT FamilyID,FatherID,MotherID,\
+                    ChildID FROM FamilyTable")
+    family_tab = cursor.fetchall()
+    family_dict = {}
+    family_table = []
+    for family in family_tab:
+        family_dict = {'FamilyID': str(family[0]),
+                        'FatherID': str(family[1]),
+                        'MotherID': str(family[2]),
+                        'ChildID': str(family[3])}
+        family_table.append(family_dict)
 
     cursor.close()
     connection.close()
@@ -188,17 +164,12 @@ def fetch_person_from_ID(name_table, id):
     """ Given a person's PersonID (AKA OwnerID) fetch the NameTable entry for
         that person.
     """
-    import string
-
-    person = {}
-
     for person in name_table:
         if person['OwnerID'] == id and person['IsPrimary'] == '1':
             return person
     else:
-        print('fetch_person_from_ID')
-        print('person not found:', id)
-        return person
+        _moduleLogger.debug("Person not found: %r", id)
+        return {}
 
 
 def fetch_parents_from_ID(person_table, name_table, family_table, person_ID):
@@ -209,10 +180,6 @@ def fetch_parents_from_ID(person_table, name_table, family_table, person_ID):
         3. using the FatherID & MotherID as the name_table OwnerID fetch the
            parents from the NameTable
     """
-    import string
-
-    person = {}
-
     for person in person_table:
         if person['PersonID'] == person_ID:
             parent_ID = person['ParentID']
@@ -245,7 +212,6 @@ def fetch_spouses_from_ID(name_table, person_table, family_table, person_ID):
     male = '0'
     female = '1'
     spouses = []
-    person = {}
 
     for person in person_table:
         if person['PersonID'] == person_ID:
@@ -307,7 +273,6 @@ def fetch_children_from_ID(child_table, name_table, person_table,
 
 
 def fetch_family_from_parent(surname, given_name, birth_year):
-
     rm_db = 'C:\\Users\\pagerk\\PyScripter_Workspace\\Python3Scripts\\MyLib\\myfamily.rmgc'
     tables = fetch_rm_tables(rm_db)
 
@@ -352,7 +317,6 @@ def fetch_family_from_parent(surname, given_name, birth_year):
     return family
 
 if __name__ == '__main__':
-
     rm_db = 'C:\\Dropbox\\RootsMagic Database\\myfamily.rmgc'
     tables = fetch_rm_tables(rm_db)
 

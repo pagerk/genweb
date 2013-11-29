@@ -49,9 +49,7 @@ def rename_files_in_folder(pathString,find_str,replace_str,file_ext):
             try:
                 os.renames(file_name, new_file_name)
             except:
-                print("Folder rename error:", sys.exc_info()[0])
-                print('  current file name = ',file_name, \
-                      '   renamed file = ', new_file_name, '\n')
+                _moduleLogger.exception("Could not rename '%s' to '%s'", file_name, new_file_name)
 
     return
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from genweb import famhist_image_artifact_xml
 
 

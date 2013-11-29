@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Name:        FileFolderOps
 # Purpose:      This has three functions:
 #                   - get a list of the files in a folder

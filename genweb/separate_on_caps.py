@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #-------------------------------------------------------------------------------
 # Name:
 # Purpose:     given a string that is a concatenation of names with their first

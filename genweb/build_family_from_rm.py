@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #------------------------------------------------------------------------------
 # Name:        build_family_from_rm
 # Purpose:      given a surname, given name, and date of birth, create a data

@@ -32,7 +32,11 @@ def fetch_rm_tables(rm_db):
     #f = open('pickle_rm_db.pkl', 'rb')
     #roots_magic_db = pickle.load(f)
 
-    connection = sqlite3.connect(rm_db)
+    try:
+        connection = sqlite3.connect(rm_db)
+    except Exception:
+        _moduleLogger.error("Failed with %s", rm_db)
+        raise
     cursor = connection.cursor()
 
     cursor.execute("SELECT OwnerID, Surname, Given, Prefix, Suffix, \

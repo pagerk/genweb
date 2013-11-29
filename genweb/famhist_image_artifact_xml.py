@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import ttk
 import logging
 
-from genweb import build_family_from_rm
+from genweb import rmagic
 
 
 _moduleLogger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class Editor(object):
 
     def __init__(self, rmagicPath):
         self._rmagicPath = rmagicPath
-        self._tables = build_family_from_rm.fetch_rm_tables(self._rmagicPath)
+        self._tables = rmagic.fetch_rm_tables(self._rmagicPath)
 
         self._matched_persons = []
 
@@ -352,7 +352,7 @@ class Editor(object):
     def _populate_match_label(self):
         numPeoplePopulated = min(self._MAX_MATCHES_VISIBLE, len(self._matched_persons))
         for number in range(numPeoplePopulated):
-            namestring = build_family_from_rm.build_given_name(self._matched_persons[number]["Given"])
+            namestring = rmagic.build_given_name(self._matched_persons[number]["Given"])
             self._match[number]["Given"].set(str(namestring))
             self._match[number]["Surname"].set(str(self._matched_persons[number]["Surname"]))
             self._match[number]["BirthYear"].set(str(self._matched_persons[number]["BirthYear"]))
@@ -362,7 +362,7 @@ class Editor(object):
             self._match[number]["BirthYear"].set("-")
 
     def _populate_target_relation(self, target, person):
-        namestring = build_family_from_rm.build_given_name(person["Given"])
+        namestring = rmagic.build_given_name(person["Given"])
         target["Given"].set(str(namestring))
         target["Surname"].set(str(person["Surname"]))
         target["BirthYear"].set(str(person["BirthYear"]))
@@ -380,7 +380,7 @@ class Editor(object):
             'BirthYear': birthyear_value,
         }
 
-        self._matched_persons = build_family_from_rm.fetch_person_from_fuzzy_name(self._tables['NameTable'], name_dict)
+        self._matched_persons = rmagic.fetch_person_from_fuzzy_name(self._tables['NameTable'], name_dict)
         self._populate_match_label()
 
     def _on_view_possible_person(self, *args):
@@ -395,7 +395,7 @@ class Editor(object):
         target = 0
         self._populate_target_relation(self._tgt_family[target], self._matched_persons[person_no])
 
-        parents = build_family_from_rm.fetch_parents_from_ID(
+        parents = rmagic.fetch_parents_from_ID(
             self._tables['PersonTable'],
             self._tables['NameTable'],
             self._tables['FamilyTable'],
@@ -408,7 +408,7 @@ class Editor(object):
         mother = 2
         self._populate_target_relation(self._tgt_family[mother], parents["Mother"])
 
-        spouses = build_family_from_rm.fetch_spouses_from_ID(
+        spouses = rmagic.fetch_spouses_from_ID(
             self._tables['NameTable'],
             self._tables['PersonTable'],
             self._tables['FamilyTable'],
@@ -419,7 +419,7 @@ class Editor(object):
             fam_spouses = 3
             self._populate_target_relation(self._tgt_family[fam_spouses+spouse_no], spouses[spouse_no])
 
-        children = build_family_from_rm.fetch_children_from_ID(
+        children = rmagic.fetch_children_from_ID(
             self._tables['ChildTable'],
             self._tables['NameTable'],
             self._tables['PersonTable'],

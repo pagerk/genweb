@@ -11,7 +11,6 @@
 # Licence:     <your licence>
 #------------------------------------------------------------------------------
 
-
 import logging
 
 
@@ -110,9 +109,8 @@ def fetch_rm_tables(rm_db):
 
     roots_magic_db = {'NameTable': name_table, 'PersonTable': person_table,
                       'ChildTable': child_table, 'FamilyTable': family_table}
-    f = open('pickle_rm_db.pkl', 'wb')
-    pickle.dump(roots_magic_db, f)
-    f.close()
+    with open('pickle_rm_db.pkl', 'wb') as f:
+        pickle.dump(roots_magic_db, f)
 
     return roots_magic_db
 

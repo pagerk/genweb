@@ -15,7 +15,7 @@ from tkinter import ttk
 from datetime import *
 import logging
 
-from genweb.build_family_from_rm import *
+from genweb import build_family_from_rm
 
 
 _moduleLogger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class Editor(object):
 
     def __init__(self, rmagicPath):
         self._rmagicPath = rmagicPath
-        self._tables = fetch_rm_tables(self._rmagicPath)
+        self._tables = build_family_from_rm.fetch_rm_tables(self._rmagicPath)
 
         self._persons = None
 
@@ -354,7 +354,7 @@ class Editor(object):
         name_dict = {'Surname': surname_value, 'Given': given_name_value,
                     'BirthYear': birthyear_value}
 
-        self._persons = fetch_person_from_fuzzy_name(self._tables['NameTable'], name_dict)
+        self._persons = build_family_from_rm.fetch_person_from_fuzzy_name(self._tables['NameTable'], name_dict)
 
         # Labels for found persons
         for number in range(5):
@@ -394,7 +394,7 @@ class Editor(object):
         #{'NameTable':name_table,'PersonTable':person_table,
         # 'ChildTable':child_table, 'FamilyTable':family_table}
 
-        parents = fetch_parents_from_ID(self._tables['PersonTable'], self._tables['NameTable'],
+        parents = build_family_from_rm.fetch_parents_from_ID(self._tables['PersonTable'], self._tables['NameTable'],
                                         self._tables['FamilyTable'],
                                         persons[person_no]['OwnerID'])
 
@@ -424,7 +424,7 @@ class Editor(object):
         tgt_family[mother]["DeathYear"].set(str(parents['Mother']["DeathYear"]))
         tgt_family[mother]["ID"].set(str(parents['Mother']["OwnerID"]))
 
-        spouses = fetch_spouses_from_ID(self._tables['NameTable'], self._tables['PersonTable'],
+        spouses = build_family_from_rm.fetch_spouses_from_ID(self._tables['NameTable'], self._tables['PersonTable'],
                                         self._tables['FamilyTable'],
                                         persons[person_no]['OwnerID'])
 
@@ -447,7 +447,7 @@ class Editor(object):
             tgt_family[fam_spouses+spouse_no]["ID"].\
                 set(str(spouses[spouse_no]["OwnerID"]))
 
-        children = fetch_children_from_ID(self._tables['ChildTable'],
+        children = build_family_from_rm.fetch_children_from_ID(self._tables['ChildTable'],
                                         self._tables['NameTable'],
                                         self._tables['PersonTable'],
                                         self._tables['FamilyTable'],

@@ -34,6 +34,7 @@ def merge(cursor, rowItems):
         row[item[0][0]]= item[1]
     return row
 
+
 def fetchone(cursor):
     """ Alternate interface for cursor.fetchone() that returns
             a dict instead of a list of tuples
@@ -46,6 +47,7 @@ def fetchone(cursor):
     if hasRow:
         return merge(cursor, hasRow)
     return None
+
 
 def fetchall(cursor, key= None):
     """ Alternate interface for cursor.fetchall() that returns either a list or
@@ -79,10 +81,12 @@ def fetchall(cursor, key= None):
         data= results
     return data
 
+
 def missingKey(item, key):
     if key not in item:
         return "[missing]"
     return item[key]
+
 
 def dumpSimpleTable(family):
     for NameID in family['NameTable']:
@@ -104,6 +108,7 @@ def dumpSimpleTable(family):
     for RecID in family['ChildTable']:
         child= family['ChildTable'][RecID]
         print(RecID,"\t","ChildID",child['ChildID'],"\t","FamilyID",child['FamilyID'])
+
 
 def loadfamily(cursor):
     """ Example of how to use fetchone() and fetchall()
@@ -225,6 +230,7 @@ def loadfamily(cursor):
             if mother not in father['Spouse']:
                 father['Spouse'].append(mother)
     return family
+
 
 def personString(person):
     if 'Name' in person:

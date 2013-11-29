@@ -277,6 +277,10 @@ def fetch_children_from_ID(child_table, name_table, person_table,
 
 
 def build_given_name(given):
+    """
+    >>> build_given_name(["Mary", "Jo"])
+    'Mary J'
+    """
     namestring = ''
     for names in given:
         if not namestring:
@@ -284,3 +288,8 @@ def build_given_name(given):
         else:
             namestring += ' ' + names[0]
     return namestring
+
+
+if __name__ == "__main__":
+    import doctest
+    print(doctest.testmod())

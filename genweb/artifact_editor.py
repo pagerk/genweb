@@ -51,7 +51,7 @@ class Editor(object):
         }
         self._srch_person["Given"].set("")
         self._srch_person["Surname"].set("")
-        self._srch_person["BirthYear"].set('YYYY')
+        self._srch_person["BirthYear"].set('19??')
 
 
         # Found person labels

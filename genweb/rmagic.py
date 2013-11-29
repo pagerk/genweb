@@ -7,6 +7,7 @@ structure with the household
 
 
 import sqlite3
+import fnmatch
 import pickle
 import logging
 import contextlib
@@ -155,13 +156,18 @@ def fetch_person_from_fuzzy_name(name_table, name_dict, year_error=2):
         name_dict_sur = metaphone.dm(name_dict['Surname'])[0]
         person_given = metaphone.dm(person['Given'][0])[0]
         name_dict_given = metaphone.dm(name_dict['Given'])[0]
-        birth_error = abs(
-            int(person['BirthYear']) - int(name_dict['BirthYear'])
-        )
+        try:
+            birth_error = abs(
+                int(person['BirthYear']) - int(name_dict['BirthYear'])
+            )
+        except ValueError:
+            years_match = fnmatch.fnmatch(person['BirthYear'], name_dict['BirthYear'])
+        else:
+            years_match = birth_error <= year_error
         if all((
             person_sur == name_dict_sur,
             person_given == name_dict_given,
-            birth_error <= year_error,
+            years_match,
             person['IsPrimary'] == '1',
         )):
             person_matches.append(person)

@@ -471,18 +471,14 @@ class Editor(object):
             self._tgt_family[fam_children+child_no]["ID"].\
                 set(str(children[child_no]["OwnerID"]))
 
-
     def _on_build_image_ref(self, *args):
         raise NotImplementedError("TODO")
-
 
     def _on_add_to_people_ref(self, *args):
         raise NotImplementedError("TODO")
 
-
     def _on_build_ext_html():
         raise NotImplementedError("TODO")
-
 
     def _on_build_inline_txt(*args):
         # Set the file generation labels

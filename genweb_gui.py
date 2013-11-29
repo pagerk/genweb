@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 
-from genweb import famhist_image_artifact_xml
+from genweb import artifact_editor
 
 
 if __name__ == '__main__':
-    famhist_image_artifact_xml.main()
+    artifact_editor.main()

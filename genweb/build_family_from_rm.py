@@ -16,7 +16,7 @@ import sqlite3
 import pickle
 import logging
 
-import metaphone
+from genweb import metaphone
 
 
 _moduleLogger = logging.getLogger(__name__)

@@ -119,7 +119,7 @@ def dm(st) :
                         nxt = ('K', 2)
                     else : # default for 'C'
                         nxt = ('K', 1)
-        elif ch == u'Ç' :
+        elif ch == 'Ç' :
             nxt = ('S', 1)
         elif ch == 'D' :
             if st[pos:pos+2] == 'DG' :
@@ -257,7 +257,7 @@ def dm(st) :
                 nxt = ('N', 2)
             else :
                 nxt = ('N', 1)
-        elif ch == u'Ñ' :
+        elif ch == 'Ñ' :
             nxt = ('N', 1)
         elif ch == 'P' :
             if st[pos+1] == 'H' :

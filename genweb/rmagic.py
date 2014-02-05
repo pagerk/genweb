@@ -262,7 +262,6 @@ def fetch_spouses_from_ID(name_table, person_table, family_table, person_ID):
             spousalRole = "FatherID"
         spouse_id = family[spousalRole]
         spouses.append(fetch_person_from_ID(name_table, spouse_id))
-        print('family = ',family,'  parental_role = ', parentalRole, '   person_ID = ', person_ID, '   spouse_id = ', spouse_id)
     return spouses
 
 

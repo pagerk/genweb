@@ -467,8 +467,8 @@ class Editor(object):
 
 def main():
     # Get the RootsMagic database info
-    #rmagicPath = 'C:\\Dropbox\\RootsMagic Database\\myfamily.rmgc'
-    rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
+    rmagicPath = 'C:\\Dropbox\\RootsMagic Database\\myfamily.rmgc'
+    #rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
     editor = Editor(rmagicPath)
     editor.mainloop()
 

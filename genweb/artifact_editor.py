@@ -327,18 +327,21 @@ class Editor(object):
         titleSep3.grid(column=0, row=current_row, columnspan="8", sticky="we")
 
         current_row = 36
-        ttk.Label(mainframe, text="Create file to add:").\
+        ttk.Label(mainframe, text="Type of file to add:").\
             grid(column=3, row=current_row, columnspan="3", sticky=EW)
 
         current_row = 37
-        ttk.Button(mainframe, text="Image\nReference", command=self._on_build_image_ref).\
+        ttk.Button(mainframe, text="Image\nReference", command=self._on_setup_image_ref).\
             grid(column=3, row=current_row, sticky=W,
                 columnspan=1, rowspan=1)
-        ttk.Button(mainframe, text="Inline\nText", command=self._on_build_inline_txt).\
+        ttk.Button(mainframe, text="Inline\nText", command=self._on_setup_build_inline_txt).\
             grid(column=4, row=current_row, sticky=W,
                 columnspan=1, rowspan=1)
-        ttk.Button(mainframe, text="External\nhtml", command=self._on_build_ext_html).\
+        ttk.Button(mainframe, text="External\nhtml", command=self._on_setup_build_ext_html).\
             grid(column=5, row=current_row, sticky=W,
+                columnspan=1, rowspan=1)
+        ttk.Button(mainframe, text="Generate\nFile", command=self._on_generate_file).\
+            grid(column=10, row=current_row, sticky=W,
                 columnspan=1, rowspan=1)
 
         current_row = 38
@@ -431,7 +434,7 @@ class Editor(object):
             fam_children = 7
             self._populate_target_relation(self._tgt_family[fam_children+child_no], children[child_no])
 
-    def _on_build_image_ref(self, *args):
+    def _on_setup_image_ref(self, *args):
         raise NotImplementedError("TODO")
 
     def _on_add_to_people_ref(self, *args):
@@ -442,7 +445,6 @@ class Editor(object):
                 ppl_ref_no += 1
         # Append checked people to the People Referenced table
         for tf_no in range(self._MAX_TARGET_FAMILIES_VISIBLE):
-            print('self._tgt_family[tf_no]["Check"] = ', self._tgt_family[tf_no]["Check"].get())
             if self._tgt_family[tf_no]["Check"].get() == 'yes':
                 self._ppl[ppl_ref_no]["Given"].set(self._tgt_family[tf_no]["Given"].get())
                 self._ppl[ppl_ref_no]["Surname"].set(self._tgt_family[tf_no]["Surname"].get())
@@ -451,10 +453,10 @@ class Editor(object):
                 self._ppl[ppl_ref_no]["ID"].set(self._tgt_family[tf_no]["ID"].get())
                 ppl_ref_no += 1
 
-    def _on_build_ext_html(self, *args):
+    def _on_setup_build_ext_html(self, *args):
         raise NotImplementedError("TODO")
 
-    def _on_build_inline_txt(self, *args):
+    def _on_setup_build_inline_txt(self, *args):
         # Set the file generation labels
         self._file_gen["Header"].set('Inline Text')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
@@ -477,6 +479,11 @@ class Editor(object):
                 self._ppl[ppl_ref]["BirthYear"].set('-')
                 self._ppl[ppl_ref]["DeathYear"].set('-')
                 self._ppl[ppl_ref]["ID"].set('-')
+
+    def _on_generate_file(self, *args):
+        file_type = file_gen["Header"].get()
+        # file_type will determinet eh type of file to be generated here
+        raise NotImplementedError("TODO")
 
 
 def main():

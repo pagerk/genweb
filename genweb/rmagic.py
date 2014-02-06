@@ -256,10 +256,7 @@ def fetch_spouses_from_ID(name_table, person_table, family_table, person_ID):
     """
     spouses = []
     for family, parentalRole in fetch_family_from_ID(person_table, family_table, person_ID):
-        if parentalRole == "FatherID":
-            spousalRole = "MotherID"
-        else:
-            spousalRole = "FatherID"
+        spousalRole = "MotherID" if parentalRole == "FatherID" else "FatherID"
         spouse_id = family[spousalRole]
         spouses.append(fetch_person_from_ID(name_table, spouse_id))
     return spouses

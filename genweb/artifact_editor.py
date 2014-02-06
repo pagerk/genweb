@@ -435,7 +435,21 @@ class Editor(object):
         raise NotImplementedError("TODO")
 
     def _on_add_to_people_ref(self, *args):
-        raise NotImplementedError("TODO")
+        # How many people are already in the People Referenced table (ppl_ref_no)
+        ppl_ref_no = 0
+        for i in range(self._MAX_PEOPLE_REFERENCED):
+            if self._ppl[ppl_ref_no]["Given"].get() != '-':
+                ppl_ref_no += 1
+        # Append checked people to the People Referenced table
+        for tf_no in range(self._MAX_TARGET_FAMILIES_VISIBLE):
+            print('self._tgt_family[tf_no]["Check"] = ', self._tgt_family[tf_no]["Check"].get())
+            if self._tgt_family[tf_no]["Check"].get() == 'yes':
+                self._ppl[ppl_ref_no]["Given"].set(self._tgt_family[tf_no]["Given"].get())
+                self._ppl[ppl_ref_no]["Surname"].set(self._tgt_family[tf_no]["Surname"].get())
+                self._ppl[ppl_ref_no]["BirthYear"].set(self._tgt_family[tf_no]["BirthYear"].get())
+                self._ppl[ppl_ref_no]["DeathYear"].set(self._tgt_family[tf_no]["DeathYear"].get())
+                self._ppl[ppl_ref_no]["ID"].set(self._tgt_family[tf_no]["ID"].get())
+                ppl_ref_no += 1
 
     def _on_build_ext_html(self, *args):
         raise NotImplementedError("TODO")

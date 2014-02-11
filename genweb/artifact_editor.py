@@ -120,8 +120,8 @@ class Editor(object):
             "Artifact_Title": StringVar(),
             "Artifact_Caption_Label": StringVar(),
             "Artifact_Caption": StringVar(),
-            "Artifact_Comment_Label": StringVar(),
-            "Artifact_Comment": StringVar(),
+            "Artifact_Misc_Label": StringVar(),
+            "Artifact_Misc": StringVar(),
             "Artifact_Path_Label": StringVar(),
             "Artifact_Path": StringVar()
         }
@@ -213,9 +213,9 @@ class Editor(object):
             grid(column=4, row=current_row, sticky=EW)
         ttk.Label(mainframe, textvariable=self._match[3]["BirthYear"]).\
             grid(column=5, row=current_row, sticky=EW)
-        ttk.Label(mainframe, textvariable=self._file_gen["Artifact_Comment_Label"]).\
+        ttk.Label(mainframe, textvariable=self._file_gen["Artifact_Misc_Label"]).\
             grid(column=10, row=current_row, sticky=EW)
-        ttk.Entry(mainframe, width=45, textvariable=self._file_gen["Artifact_Comment"]).\
+        ttk.Entry(mainframe, width=45, textvariable=self._file_gen["Artifact_Misc"]).\
             grid(column=11, row=current_row, sticky=NS,
                 columnspan=6, rowspan=1)
 
@@ -382,8 +382,19 @@ class Editor(object):
         namestring = rmagic.build_given_name(person["Given"])
         target["Given"].set(str(namestring))
         target["Surname"].set(str(person["Surname"]))
-        target["BirthYear"].set(str(person["BirthYear"]))
-        target["DeathYear"].set(str(person["DeathYear"]))
+
+        birth_year = str(person["BirthYear"])
+        if birth_year == '0':
+            target["BirthYear"].set('')
+        else:
+            target["BirthYear"].set(birth_year)
+
+
+        death_year = str(person["DeathYear"])
+        if death_year == '0':
+            target["DeathYear"].set('')
+        else:
+            target["DeathYear"].set(death_year)
         target["ID"].set(str(person["OwnerID"]))
 
     def _on_search_for_matches(self, *args):
@@ -460,7 +471,10 @@ class Editor(object):
                 self._ppl[ppl_ref_no]["Given"].set(self._tgt_family[tf_no]["Given"].get())
                 self._ppl[ppl_ref_no]["Surname"].set(self._tgt_family[tf_no]["Surname"].get())
                 self._ppl[ppl_ref_no]["BirthYear"].set(self._tgt_family[tf_no]["BirthYear"].get())
-                self._ppl[ppl_ref_no]["DeathYear"].set(self._tgt_family[tf_no]["DeathYear"].get())
+                death_year = self._tgt_family[tf_no]["DeathYear"].get()
+                if death_year == '0':
+                    death_year = ''
+                self._ppl[ppl_ref_no]["DeathYear"].set(death_year)
                 self._ppl[ppl_ref_no]["ID"].set(self._tgt_family[tf_no]["ID"].get())
                 ppl_ref_no += 1
 
@@ -470,7 +484,7 @@ class Editor(object):
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
         self._file_gen["Artifact_Caption_Label"].set('Caption')
-        self._file_gen["Artifact_Comment_Label"].set('Comment')
+        self._file_gen["Artifact_Misc_Label"].set('Comment')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
         # Only display the people who have been selected
@@ -495,7 +509,7 @@ class Editor(object):
         self._file_gen["Header"].set('External HTML')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
-        self._file_gen["Artifact_Comment_Label"].set('Comment')
+        self._file_gen["Artifact_Misc_Label"].set('Relative Path/File')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
         # Only display the people who have been selected
@@ -520,7 +534,7 @@ class Editor(object):
         self._file_gen["Header"].set('Inline Text')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
-        self._file_gen["Artifact_Comment_Label"].set('Comment')
+        self._file_gen["Artifact_Misc"].set('Comment')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
         # Only display the people who have been selected
@@ -543,15 +557,20 @@ class Editor(object):
 
     def _on_generate_file(self, *args):
         artifact_ID = self._file_gen["Artifact_ID"].get()
-        # I need to make this work for the case where the path separator is '/'
+        # I need to make this also work for the case where the path separator is '/'
         artifact_path = self._file_gen["Artifact_Path"].get().replace('\\','/')
-        artifact_label = self._ppl[0]["Surname"].get() + self._ppl[0]["Given"].get().replace(' ','')
+        artifact_label = self._ppl[0]["Surname"].get() + \
+                            self._ppl[0]["Given"].get().replace(' ','') +\
+                            self._ppl[0]["BirthYear"].get()
         file_name = artifact_path + '/' + artifact_ID + artifact_label + '.xml'
 
         referenced_people = ''
         for person_no in range(self._MAX_PEOPLE_REFERENCED):
             if self._ppl[person_no]["Surname"].get() != '-':
-                referenced_people = self._ppl[person_no]["Surname"].get() + self._ppl[person_no]["Given"].get().replace(' ','') + ';' + referenced_people
+                referenced_people = self._ppl[person_no]["Surname"].get() + \
+                    self._ppl[person_no]["Given"].get().replace(' ','') + \
+                    self._ppl[person_no]["BirthYear"].get() + ';' \
+                    + referenced_people
         referenced_people = referenced_people.rstrip(';')
 
 
@@ -562,16 +581,45 @@ class Editor(object):
         try:
             with open(file_name,'w') as f:
                 f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n')
-                f.write('<inline>\n')
-                f.write('\t<path>' + artifact_label + '</path>\n')
-                f.write('\t<file>' + artifact_ID + artifact_label + '.src</file>\n')
-                f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
-                f.write('\t<comment>' + self._file_gen["Artifact_Comment"].get() + '</comment>\n')
-                f.write('\t<people>' + referenced_people + '</people>\n')
-                f.write('</inline>')
+                if self._file_gen["Header"].get() == 'Inline Text':
+                    f.write('<inline>\n')
+                    f.write('\t<path>' + artifact_label + '</path>\n')
+                    f.write('\t<file>' + artifact_ID + artifact_label + '.src</file>\n')
+                    f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
+                    f.write('\t<comment>' + self._file_gen["Artifact_Misc"].get() + '</comment>\n')
+                    f.write('\t<people>' + referenced_people + '</people>\n')
+                    f.write('</inline>')
+
+                elif  self._file_gen["Header"].get() == 'External HTML':
+                    f.write('<href>\n')
+                    f.write('\t<path>' + artifact_label + '</path>\n')
+                    f.write('\t<file>' + self._file_gen["Artifact_Misc"].get() + '.src</file>\n')
+                    f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
+                    f.write('\t<people>' + referenced_people + '</people>\n')
+                    f.write('</href>')
+
+                elif  self._file_gen["Header"].get() == 'Image Reference':
+                    f.write('<picture>\n')
+                    f.write('\t<path>' + artifact_label + '</path>\n')
+                    f.write('\t<file>' + artifact_ID + artifact_label + '.jpg</file>\n')
+                    f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
+                    f.write('\t<caption>' + self._file_gen["Artifact_Caption"].get() + '</caption>\n')
+                    f.write('\t<comment>' + self._file_gen["Artifact_Misc"].get() + '</comment>\n')
+                    f.write('\t<people>' + referenced_people + '</people>\n')
+                    f.write('\t<width>' + "600" + '</width>\n')
+                    f.write('</picture>')
+
 
         except IOError:
             print('Failed to open ', file_name)
+
+        # Reset the referenced people
+        for ppl_no in range(self._MAX_PEOPLE_REFERENCED):
+            self._ppl[ppl_no]["Given"].set('-')
+            self._ppl[ppl_no]["Surname"].set('-')
+            self._ppl[ppl_no]["BirthYear"].set('-')
+            self._ppl[ppl_no]["DeathYear"].set('-')
+            self._ppl[ppl_no]["ID"].set('-')
 
 
 

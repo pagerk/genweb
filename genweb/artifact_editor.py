@@ -120,6 +120,10 @@ class Editor(object):
             "Artifact_Title": StringVar(),
             "Artifact_Caption_Label": StringVar(),
             "Artifact_Caption": StringVar(),
+            "Artifact_Comment_Label": StringVar(),
+            "Artifact_Comment": StringVar(),
+            "Artifact_Path_Label": StringVar(),
+            "Artifact_Path": StringVar()
         }
 
         # Define the rows
@@ -165,8 +169,8 @@ class Editor(object):
             grid(column=5, row=current_row, sticky=EW)
         ttk.Label(mainframe, textvariable=self._file_gen["Artifact_ID_Label"]).\
             grid(column=10, row=current_row, sticky=EW, columnspan=2)
-        ttk.Entry(mainframe, width=7, textvariable=self._file_gen["Artifact_ID"]).\
-                grid(column=12, row=current_row, sticky=(W, E), columnspan=3)
+        ttk.Entry(mainframe, width=10, textvariable=self._file_gen["Artifact_ID"]).\
+                grid(column=12, row=current_row, sticky=W, columnspan=3)
 
         current_row = 5
         ttk.Radiobutton(mainframe, text='', variable=self._selected_person, value='1').\
@@ -193,8 +197,8 @@ class Editor(object):
             grid(column=5, row=current_row, sticky=EW)
         ttk.Label(mainframe, textvariable=self._file_gen["Artifact_Caption_Label"]).\
             grid(column=10, row=current_row, sticky=EW)
-        ttk.Entry(mainframe, width=7, textvariable=self._file_gen["Artifact_Caption"]).\
-            grid(column=11, row=current_row, sticky=(W, E),
+        ttk.Entry(mainframe, width=45, textvariable=self._file_gen["Artifact_Caption"]).\
+            grid(column=11, row=current_row, sticky=NS,
                 columnspan=6, rowspan=1)
 
         current_row = 7
@@ -209,6 +213,11 @@ class Editor(object):
             grid(column=4, row=current_row, sticky=EW)
         ttk.Label(mainframe, textvariable=self._match[3]["BirthYear"]).\
             grid(column=5, row=current_row, sticky=EW)
+        ttk.Label(mainframe, textvariable=self._file_gen["Artifact_Comment_Label"]).\
+            grid(column=10, row=current_row, sticky=EW)
+        ttk.Entry(mainframe, width=45, textvariable=self._file_gen["Artifact_Comment"]).\
+            grid(column=11, row=current_row, sticky=NS,
+                columnspan=6, rowspan=1)
 
         current_row = 8
         ttk.Radiobutton(mainframe, text='', variable=self._selected_person, value='4').\
@@ -219,6 +228,11 @@ class Editor(object):
             grid(column=4, row=current_row, sticky=EW)
         ttk.Label(mainframe, textvariable=self._match[4]["BirthYear"]).\
             grid(column=5, row=current_row, sticky=EW)
+        ttk.Label(mainframe, textvariable=self._file_gen["Artifact_Path_Label"]).\
+            grid(column=10, row=current_row, sticky=EW)
+        ttk.Entry(mainframe, width=45, textvariable=self._file_gen["Artifact_Path"]).\
+            grid(column=11, row=current_row, sticky=NS,
+                columnspan=6, rowspan=1)
 
         current_row = 9
         ttk.Radiobutton(mainframe, text='', variable=self._selected_person, value='5').\
@@ -434,9 +448,6 @@ class Editor(object):
             fam_children = 7
             self._populate_target_relation(self._tgt_family[fam_children+child_no], children[child_no])
 
-    def _on_setup_image_ref(self, *args):
-        raise NotImplementedError("TODO")
-
     def _on_add_to_people_ref(self, *args):
         # How many people are already in the People Referenced table (ppl_ref_no)
         ppl_ref_no = 0
@@ -453,15 +464,14 @@ class Editor(object):
                 self._ppl[ppl_ref_no]["ID"].set(self._tgt_family[tf_no]["ID"].get())
                 ppl_ref_no += 1
 
-    def _on_setup_build_ext_html(self, *args):
-        raise NotImplementedError("TODO")
-
-    def _on_setup_build_inline_txt(self, *args):
+    def _on_setup_image_ref(self, *args):
         # Set the file generation labels
-        self._file_gen["Header"].set('Inline Text')
+        self._file_gen["Header"].set('Image Reference')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
         self._file_gen["Artifact_Caption_Label"].set('Caption')
+        self._file_gen["Artifact_Comment_Label"].set('Comment')
+        self._file_gen["Artifact_Path_Label"].set('Path')
 
         # Only display the people who have been selected
         ppl_ref = 0
@@ -480,10 +490,89 @@ class Editor(object):
                 self._ppl[ppl_ref]["DeathYear"].set('-')
                 self._ppl[ppl_ref]["ID"].set('-')
 
+    def _on_setup_build_ext_html(self, *args):
+        # Set the file generation labels
+        self._file_gen["Header"].set('External HTML')
+        self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
+        self._file_gen["Artifact_Title_Label"].set('Title')
+        self._file_gen["Artifact_Comment_Label"].set('Comment')
+        self._file_gen["Artifact_Path_Label"].set('Path')
+
+        # Only display the people who have been selected
+        ppl_ref = 0
+        for ref in range(len(self._tgt_family)):
+            if str(self._tgt_family[ref]["Check"].get()) == 'yes':
+                self._ppl[ppl_ref]["Given"].set(str(self._tgt_family[ref]["Given"].get()))
+                self._ppl[ppl_ref]["Surname"].set(str(self._tgt_family[ref]["Surname"].get()))
+                self._ppl[ppl_ref]["BirthYear"].set(str(self._tgt_family[ref]["BirthYear"].get()))
+                self._ppl[ppl_ref]["DeathYear"].set(str(self._tgt_family[ref]["DeathYear"].get()))
+                self._ppl[ppl_ref]["ID"].set(str(self._tgt_family[ref]["ID"].get()))
+                ppl_ref += 1
+        for ppl_ref in range(ppl_ref, len(self._tgt_family)):
+                self._ppl[ppl_ref]["Given"].set('-')
+                self._ppl[ppl_ref]["Surname"].set('-')
+                self._ppl[ppl_ref]["BirthYear"].set('-')
+                self._ppl[ppl_ref]["DeathYear"].set('-')
+                self._ppl[ppl_ref]["ID"].set('-')
+
+    def _on_setup_build_inline_txt(self, *args):
+        # Set the file generation labels
+        self._file_gen["Header"].set('Inline Text')
+        self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
+        self._file_gen["Artifact_Title_Label"].set('Title')
+        self._file_gen["Artifact_Comment_Label"].set('Comment')
+        self._file_gen["Artifact_Path_Label"].set('Path')
+
+        # Only display the people who have been selected
+        ppl_ref = 0
+        for ref in range(len(self._tgt_family)):
+            if str(self._tgt_family[ref]["Check"].get()) == 'yes':
+                self._ppl[ppl_ref]["Given"].set(str(self._tgt_family[ref]["Given"].get()))
+                self._ppl[ppl_ref]["Surname"].set(str(self._tgt_family[ref]["Surname"].get()))
+                self._ppl[ppl_ref]["BirthYear"].set(str(self._tgt_family[ref]["BirthYear"].get()))
+                self._ppl[ppl_ref]["DeathYear"].set(str(self._tgt_family[ref]["DeathYear"].get()))
+                self._ppl[ppl_ref]["ID"].set(str(self._tgt_family[ref]["ID"].get()))
+                ppl_ref += 1
+        for ppl_ref in range(ppl_ref, len(self._tgt_family)):
+                self._ppl[ppl_ref]["Given"].set('-')
+                self._ppl[ppl_ref]["Surname"].set('-')
+                self._ppl[ppl_ref]["BirthYear"].set('-')
+                self._ppl[ppl_ref]["DeathYear"].set('-')
+                self._ppl[ppl_ref]["ID"].set('-')
+
+
     def _on_generate_file(self, *args):
-        file_type = file_gen["Header"].get()
-        # file_type will determinet eh type of file to be generated here
-        raise NotImplementedError("TODO")
+        artifact_ID = self._file_gen["Artifact_ID"].get()
+        # I need to make this work for the case where the path separator is '/'
+        artifact_path = self._file_gen["Artifact_Path"].get().replace('\\','/')
+        artifact_label = self._ppl[0]["Surname"].get() + self._ppl[0]["Given"].get().replace(' ','')
+        file_name = artifact_path + '/' + artifact_ID + artifact_label + '.xml'
+
+        referenced_people = ''
+        for person_no in range(self._MAX_PEOPLE_REFERENCED):
+            if self._ppl[person_no]["Surname"].get() != '-':
+                referenced_people = self._ppl[person_no]["Surname"].get() + self._ppl[person_no]["Given"].get().replace(' ','') + ';' + referenced_people
+        referenced_people = referenced_people.rstrip(';')
+
+
+
+        if os.path.isfile(file_name) == True:
+            file_name = artifact_path + '/' + artifact_ID + artifact_label + '_new.xml'
+            print('Need to resolve differences between the file ',file_name,' and its previous version')
+        try:
+            with open(file_name,'w') as f:
+                f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n')
+                f.write('<inline>\n')
+                f.write('\t<path>' + artifact_label + '</path>\n')
+                f.write('\t<file>' + artifact_ID + artifact_label + '.src</file>\n')
+                f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
+                f.write('\t<comment>' + self._file_gen["Artifact_Comment"].get() + '</comment>\n')
+                f.write('\t<people>' + referenced_people + '</people>\n')
+                f.write('</inline>')
+
+        except IOError:
+            print('Failed to open ', file_name)
+
 
 
 def main():

@@ -509,6 +509,7 @@ class Editor(object):
         self._file_gen["Header"].set('External HTML')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
+        self._file_gen["Artifact_Caption_Label"].set('')
         self._file_gen["Artifact_Misc_Label"].set('Relative Path/File')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
@@ -534,7 +535,8 @@ class Editor(object):
         self._file_gen["Header"].set('Inline Text')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
-        self._file_gen["Artifact_Misc"].set('Comment')
+        self._file_gen["Artifact_Caption_Label"].set('')
+        self._file_gen["Artifact_Misc_Label"].set('')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
         # Only display the people who have been selected

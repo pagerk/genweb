@@ -218,6 +218,15 @@ def fetch_parents_from_ID(person_table, name_table, family_table, person_ID):
     father = fetch_person_from_ID(name_table, father_ID)
     mother = fetch_person_from_ID(name_table, mother_ID)
 
+    if father == {}:
+        father = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                    'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                    'Suffix': '', 'Surname': '', 'OwnerID': ''}
+    if mother == {}:
+        mother = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                    'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                    'Suffix': '', 'Surname': '', 'OwnerID': ''}
+
     parents = {'Father': father, 'Mother': mother}
 
     return parents

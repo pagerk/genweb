@@ -51,7 +51,7 @@ class Editor(object):
         }
         self._srch_person["Given"].set("")
         self._srch_person["Surname"].set("")
-        self._srch_person["BirthYear"].set('19??')
+        self._srch_person["BirthYear"].set('1???')
 
 
         # Found person labels
@@ -608,7 +608,7 @@ class Editor(object):
                     f.write('\t<caption>' + self._file_gen["Artifact_Caption"].get() + '</caption>\n')
                     f.write('\t<comment>' + self._file_gen["Artifact_Misc"].get() + '</comment>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
-                    f.write('\t<width>' + "600" + '</width>\n')
+                    f.write('\t<width>' + "300" + '</width>\n')
                     f.write('</picture>')
 
 

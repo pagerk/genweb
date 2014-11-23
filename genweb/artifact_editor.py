@@ -51,7 +51,7 @@ class Editor(object):
         }
         self._srch_person["Given"].set("")
         self._srch_person["Surname"].set("")
-        self._srch_person["BirthYear"].set('1???')
+        self._srch_person["BirthYear"].set('????')
 
 
         # Found person labels
@@ -383,9 +383,11 @@ class Editor(object):
         target["Given"].set(str(namestring))
         target["Surname"].set(str(person["Surname"]))
 
+        # If there is no BirthYear, RootsMagic returns '0" I want to set the
+        # BirthYear to '0000' if there is no BirthYear - chg: 20141122 rkp
         birth_year = str(person["BirthYear"])
         if birth_year == '0':
-            target["BirthYear"].set('')
+            target["BirthYear"].set('0000')
         else:
             target["BirthYear"].set(birth_year)
 

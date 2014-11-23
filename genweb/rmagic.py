@@ -161,7 +161,15 @@ def fetch_person_from_fuzzy_name(name_table, name_dict, year_error=2):
                 int(person['BirthYear']) - int(name_dict['BirthYear'])
             )
         except ValueError:
-            years_match = fnmatch.fnmatch(person['BirthYear'], name_dict['BirthYear'])
+            # RootsMagic sets the birthyear to zero if a birthyear isn't given
+            # if the search parameter is '????' and the birthyear is zero,
+            #I want to set the equal to '0000'
+            if person['BirthYear'] == '0':
+                match_birthyear = '0000'
+            else:
+                match_birthyear = person['BirthYear']
+
+            years_match = fnmatch.fnmatch(match_birthyear, name_dict['BirthYear'])
         else:
             years_match = birth_error <= year_error
         if all((

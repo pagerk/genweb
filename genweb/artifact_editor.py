@@ -279,7 +279,7 @@ class Editor(object):
             grid(column=10, row=current_row, sticky=EW)
 
         current_row = 13
-        ttk.Label(mainframe, text="Target").\
+        ttk.Label(mainframe, text="Search Target").\
             grid(column=1, row=current_row, sticky=EW)
 
         for current_row in range(13,35):
@@ -563,9 +563,7 @@ class Editor(object):
         artifact_ID = self._file_gen["Artifact_ID"].get()
         # I need to make this also work for the case where the path separator is '/'
         artifact_path = self._file_gen["Artifact_Path"].get().replace('\\','/')
-        artifact_label = self._ppl[0]["Surname"].get() + \
-                            self._ppl[0]["Given"].get().replace(' ','') +\
-                            self._ppl[0]["BirthYear"].get()
+        artifact_label = artifact_path.rpartition('/')[2]
         file_name = artifact_path + '/' + artifact_ID + artifact_label + '.xml'
 
         referenced_people = ''

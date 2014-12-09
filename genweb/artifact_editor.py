@@ -4,6 +4,7 @@ import os
 from tkinter import *
 from tkinter import ttk
 import logging
+import datetime
 
 from . import rmagic
 
@@ -580,6 +581,7 @@ class Editor(object):
         if os.path.isfile(file_name) == True:
             file_name = artifact_path + '/' + artifact_ID + artifact_label + '_new.xml'
             print('Need to resolve differences between the file ',file_name,' and its previous version')
+        date_modified = str(datetime.date.today())
         try:
             with open(file_name,'w') as f:
                 f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n')
@@ -590,6 +592,7 @@ class Editor(object):
                     f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
                     f.write('\t<comment>' + self._file_gen["Artifact_Misc"].get() + '</comment>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
+                    f.write('\t<mod_date>' + date_modified + '</mod_date>\n')
                     f.write('</inline>')
 
                 elif  self._file_gen["Header"].get() == 'External HTML':
@@ -598,6 +601,7 @@ class Editor(object):
                     f.write('\t<file>' + self._file_gen["Artifact_Misc"].get() + '.src</file>\n')
                     f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
+                    f.write('\t<mod_date>' + date_modified + '</mod_date>\n')
                     f.write('</href>')
 
                 elif  self._file_gen["Header"].get() == 'Image Reference':
@@ -608,7 +612,8 @@ class Editor(object):
                     f.write('\t<caption>' + self._file_gen["Artifact_Caption"].get() + '</caption>\n')
                     f.write('\t<comment>' + self._file_gen["Artifact_Misc"].get() + '</comment>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
-                    f.write('\t<width>' + "300" + '</width>\n')
+                    f.write('\t<height>' + "330" + '</height>\n')
+                    f.write('\t<mod_date>' + date_modified + '</mod_date>\n')
                     f.write('</picture>')
 
 

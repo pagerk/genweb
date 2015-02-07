@@ -134,7 +134,7 @@ def fetch_person_from_name(name_table, name_dict):
     person_matches = []
     for person in name_table:
         if all((
-            person['Surname'].replace(' ', '') == name_dict['Surname'],
+            person['Surname'].replace(' ', '') == name_dict['Surname'].replace(' ', ''),
             int(person['BirthYear']) == int(name_dict['BirthYear']),
             person['IsPrimary'] == '1',
         )):

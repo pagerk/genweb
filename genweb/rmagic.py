@@ -198,6 +198,16 @@ def fetch_person_from_ID(name_table, id):
         return {}
 
 
+def fetch_sex_from_ID(person_table, person_ID):
+    #Owner_ID in the name_table points to
+    person_sex = ''
+    for person in person_table:
+        if person['PersonID'] == person_ID:
+            person_sex = 'male' if person['Sex'] == 0 else 'female'
+            break
+    return person_sex
+
+
 def fetch_parents_from_ID(person_table, name_table, family_table, person_ID):
     """
     Given a target person's PersonID (OwnerID in name_table)

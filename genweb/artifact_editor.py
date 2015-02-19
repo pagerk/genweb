@@ -432,6 +432,7 @@ class Editor(object):
             self._tables['FamilyTable'],
             self._matched_persons[person_no]['OwnerID'],
         )
+        print('parents = ', parents)
 
         father = 1
         self._populate_target_relation(self._tgt_family[father], parents["Father"])

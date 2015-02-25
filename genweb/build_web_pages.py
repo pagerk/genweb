@@ -91,15 +91,25 @@ class build_web_pages(object):
             letters capitalized [e.g. PageRobertK1949], separate them into
             separate words or characters and the date -
             assumes person IDs contain no spaces and every person's ID has
-            a date or 0000"""
+            a date or 0000
+            The results are a dictionary with the following keys
+            'BirthYear'
+            'Surname'
+            'Given'
+            'Initial'"""
 
         import string
 
         # extract the date
+        debug = 'no'
+        if item == '':
+            debug = 'yes'
         person = {}
-        person['BirthYear'] = item[-4:]
+        person['BirthYear'] = item.strip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
         item = item.strip('0123456789')
-        #print('date = ',person['BirthYear'], '  name string = ',item)
+        if item == '':
+            print('date = ',person['BirthYear'], '  name string = ',item)
+
         # Separate the text portion of the file name into a list of names that start
         # with capital letters
         item_length = len(item)
@@ -114,6 +124,10 @@ class build_web_pages(object):
         if 0 not in cap:
             cap.insert(0,0)
 
+        if debug == 'yes':
+            print('_separate_names line 121 item = ', item)
+            print('_separate_names line 121 cap = ', cap)
+
         cap_length = len(cap)
         for cap_num in range(cap_length):
             start = cap[cap_num]
@@ -126,7 +140,9 @@ class build_web_pages(object):
                 name.append(item[start:end])
             else:
                 name.append(item[start])
-        #print('separate_names------------ name = ', name)
+
+        if debug == 'yes':
+            print('line 138 separate_names------------ name = ', name)
 
         surname_exceptions = ["O'",'ap','de','De','le','Le','Mc','Mac','Van','of']
         givenname_exceptions = ['De']
@@ -134,7 +150,6 @@ class build_web_pages(object):
             person['Surname'] = name[0]
             person['Given'] = ''
             person['Initial'] = ''
-            #print('len(name) = ',len(name), '  person = ', person)
 
         if len(name) == 2 and (name[0] in surname_exceptions):
             person['Surname'] = name[0] + name[1]
@@ -142,7 +157,6 @@ class build_web_pages(object):
             person['Initial'] = ''
         elif len(name) == 2:
             person['Surname'] = name[0]
-            #print('len(name) = ',len(name), '  person = ', person)
             person['Given'] = name[1]
             person['Initial'] = ''
 
@@ -160,23 +174,31 @@ class build_web_pages(object):
 
 
         if len(name) == 4:
-                if (name[0] in surname_exceptions):
-                    if (name[2] in givenname_exceptions):
-                        person['Surname'] = name[0] + name[1]
-                        person['Given'] = name[2] + name[3]
-                    else:
-                        person['Surname'] = name[0] + name[1]
-                        person['Given'] = name[2]
-                        person['Initial'] = name[3]
-                else:
-                    person['Surname'] = name[0]
-                    person['Given'] = name[1] + name[2]
-                    person['Initial'] = name[3]
+            if (name[0] in surname_exceptions):
+                person['Surname'] = name[0] + name[1]
+                person['Given'] =  name[2]
+                person['Initial'] = name[3]
+            elif (name[1] in surname_exceptions):
+                person['Surname'] = name[0]
+                person['Given'] = name[1] + name[2]
+                person['Initial'] = name[3]
+            else:
+                person['Surname'] = name[0]
+                person['Given'] = name[1]
+                person['Initial'] =  name[2] + name[3]
 
         if len(name) == 5:
-            person['Surname'] = name[0] + name[1]
-            person['Given'] = name[2] + name[3]
-            person['Initial'] = name[4]
+            if (name[0] in surname_exceptions):
+                person['Surname'] = name[0] + name[1]
+                person['Given'] = name[2]
+                person['Initial'] =  name[3] + name[4]
+            else:
+                person['Surname'] = name[0]
+                person['Given'] = name[1]
+                person['Initial'] = name[2] + name[3] + name[4]
+
+        if debug == 'yes':
+            print('line 190 len(name) = ',len(name), '  person = ', person)
 
 
         return person
@@ -200,12 +222,12 @@ class build_web_pages(object):
                 else:
                     current_letter = person[0]
                 file_name = folders_path + '/' + current_letter + '.html'
-                person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], person_id_dict)
+                person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
                 #print('person = ', person)
                 #print('----- person_facts = ', person_facts)
                 if len(person_facts) == 0:
-                    f = open(folders_path + '/PeopleNotFound.txt','a')
-                    f.write('*********** person = ', person + '\n')
+                    f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
+                    f.write('*****build_web_pages line 208****** person = ', person + '\n')
                     f.close()
                     continue
 
@@ -285,7 +307,7 @@ class build_web_pages(object):
     def _generate_person_web(self, person, person_dict):
         artifact_ids = sorted(person_dict.keys())
         person_id_dict = self._separate_names(person)
-        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], person_id_dict)
+        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
         #print('person = ', person, '----- person_facts = ', person_facts)
         for artifact in artifact_ids:
             #print(artifact,person_dict[artifact])
@@ -293,830 +315,316 @@ class build_web_pages(object):
         return
 
     def _generate_all_hourglass_webs(self, person, folders_path):
+
         """
         This will create an hourglass html file for each person in the
         Individual_Web_Pages folder in that person's folder. The source of the
-        information is my rootsmagic database.
+        information is my rootsmagic database. Note that "person" is the same
+        as person_facts['GenWebID']
         """
 
-        if person.lower().lstrip('abcdefghijklmnopqrstuvwxyz').isdigit():
-            person_id_dict = self._separate_names(person)
-            # person_id_dict is of the form:
-            # {'BirthYear':'1896','Given':'Archie','Initial':'B',Surname':'Abdill'}
-
-            person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], person_id_dict)
-        	# person_facts is of the form:
-            # person_facts =  [{'Surname': 'Page', 'OwnerID': '1',
-            #        'Nickname': 'Bob', 'Suffix': '', 'BirthYear': '1949',
-            #        'Prefix': '', 'DeathYear': '0',
-            #        'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1'}]
-        	# where these rootsmagic tags are equivalent ; OwnerID = person_ID
-
-            #print('person = ', person)
-            #print('----- person_facts = ', person_facts)
-            if len(person_facts) == 0:
-                f = open(folders_path + '/PeopleNotFound.txt','a')
-                f.write('*********** person = ', person + '\n')
-                f.close()
-            else:
-                person_facts = person_facts[0]
-                self._generate_one_hourglass_web(person, person_facts, folders_path)
-
-        return
-
-    def _generate_one_hourglass_web(self, person, person_facts, folders_path):
-        # person =
+        # self._separate_names(person) is of the form:
+        # {'BirthYear':'1896','Given':'Archie','Initial':'B', 'Surname':'Abdill'}
+        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'],\
+                                                     self._tables['PersonTable'], \
+                                                     self._separate_names(person))
     	# person_facts is of the form:
-        # person_facts =  [{'Surname': 'Page', 'OwnerID': '1',
-        #        'Nickname': 'Bob', 'Suffix': '', 'BirthYear': '1949',
-        #        'Prefix': '', 'DeathYear': '0',
-        #        'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1'}]
+        #[{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+        #  'Suffix': '', 'BirthYear': '1949','Prefix': '',
+        #  'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+        #  'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+        #  'FullName': 'Page, Robert Kenneth'}]
     	# where these rootsmagic tags are equivalent ; OwnerID = person_ID
 
-        hourglassFile = open(folders_path + '/HourGlass.html', 'w')
-
-
-        #This builds the standard html header I use for the family history files
-        print('person = ', person)
-        #print('person_facts = ', person_facts)
-        headerList = []
-        headerList.append("<html>\n")
-        headerList.append("<head>\n")
-        headerList.append('    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />' + "\n")
-
-        given_names = ''
-        for names in person_facts['Given']:
-            given_names = given_names + ' ' + names
-
-        headerList.append('    <title>' + person_facts['Surname'] + ',' + given_names + '</title>' + "\n")
-        headerList.append('    <link href="../css/individual.css" type="text/css" rel="stylesheet" />' + "\n")
-        headerList.append('    <style type="text/css">' "\n")
-        headerList.append('    /*<![CDATA[*/' + "\n")
-        headerList.append(' div.ReturnToTop {text-align: right}' + "\n")
-        headerList.append('    /*]]>*/' + "\n")
-        headerList.append("    </style>\n")
-        headerList.append("</head>\n")
-        headerList.append('<body background="../images/back.gif">' + "\n")
-        buildString = '    <h1><a name="Top"></a>' + person_facts['Surname'] + ',' + given_names
-        if person_facts['BirthYear'] == '':       #if not birth year then pass
-            pass
+        if len(person_facts) == 0:
+            print('person = ', person)
+            f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
+            f.write('*****build_web_pages line 323****** person = ' + person + '\n')
+            f.close()
         else:
-            buildString = buildString + ' - ' + person_facts['BirthYear']
+            person_facts = person_facts[0]
 
-        if person_facts['DeathYear'] == '':       # if no death year then pass
-            pass
-        else:
-            buildString = buildString + ' - ' + person_facts['DeathYear']
+            #This builds the standard html header I use for the family history files
+            #print('person = ', person)
+            #print('person_facts = ', person_facts)
+            headerList = []
+            headerList.append("<html>\n")
+            headerList.append("<head>\n")
+            headerList.append('    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />' + "\n")
 
-        buildString = buildString + "</h1>\n"
-        headerList.append(buildString)
-        #buildString = '<address>' + personDict['address'] + ', ' + personDict['phone'] +\
-        #              ', ' + personDict['email'] + ', ' + personDict['webpage'] + "</address>\n"
-        #print('headerList = ', headerList)                                """
+            given_names = ''
+            for names in person_facts['Given']:
+                given_names = given_names + ' ' + names
 
-        strSpouseArrow    = "../images/Right_Arrow_Maroon.gif"
-        strLtArrow        = "../images/Left_Arrow.gif"
-        strRtArrow        = "../images/Right_Arrow.gif"
-        strTDCenter       = "    <td align=\"center\""
-        strColor          = " bgcolor=\"maroon\""
-        strWidth          = " width=\"75\""
-        conTR             = "  <tr>\n"
-        conSlashTR        = "  </tr>\n"
-        conSlashTD        = "    </td>\n"
-        conImageSrc       = "<img src="
-        conHref           = "<a href="
-        conAEnd           = "</a>"
-        conHGlass         = "/HourGlass.html"
-        conClose          = ">"
-        conDummyPic       = "../images/back.gif"
-        conDummyMalePic   = "../images/male.jpg"
-        conDummyFemalePic = "../images/female.jpg"
-        conNameFmt        = "<p>"
-        conNameFmtClose   = "</p>"
-        con3Space         = "&nbsp; &nbsp; &nbsp;"
-        con6Space         = "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"
-
-        hourglasshtmlList = headerList
-
-        #Build self
-        person_sex = rmagic.fetch_sex_from_ID(\
-                                    self._tables['PersonTable'],\
-                                    person_facts['OwnerID'])
-        conDummyPic = conDummyMalePic if person_sex == "male" else conDummyFemalePic
-
-
-        if os.path.isfile(folders_path + '/' + person + '.jpg'):
-            strSelfPic = strTDCenter + conClose + conImageSrc + "\"" + "../" +\
-                         person + "/" + person + '.jpg' \
-                         + strWidth + conClose + conSlashTD
-        else:
-            strSelfPic = strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                         + "\"" + strWidth + conClose + conSlashTD
-
-        strSelfName = strTDCenter + conClose + conHref + "\"" + "index.html"\
-                      + "\"" + conClose + conNameFmt + person_facts['Surname']\
-                      + ', ' + given_names + conNameFmtClose\
-                      + conAEnd + conSlashTD
-
-        #Build father - possibilities are that:
-        #                    - there is no father's name in the person's entry
-        #                                   - father's position empty and no link
-        #                    - there is a father's name in the person's entry
-        #                                   - father's position (if no record, no name available)
-        #                    - there is a record for the father
-        #                                   - father's position and link
-        #                    - there is not a record for the father
-        #                                   - no father's position and no link
-        #Need to do three things here
-        # - if I have the person's name, use it - blnName
-        # - if there is a person_id for the person, use it - blnHref
-        # - if neither, don't use maroon
-        conDummyPic = conDummyMalePic
-        #print('person_facts = ', person_facts)
-        parents = rmagic.fetch_parents_from_ID(\
-                                    self._tables['PersonTable'],\
-                                    self._tables['NameTable'],\
-                                    self._tables['FamilyTable'],\
-                                    person_facts['OwnerID'])
-        if parents['Father']['Surname'] != '' or parents['Father']['Given'] != '':  # Does the father exist?
-             #  - there is a father's name in the person's entry
-
-            father_dict = parents['Father']
-            person_id = father_dict['Surname']
-            for given_num in range(len(father_dict['Given'])):
-                if given_num == 0:
-                    person_id = person_id + father_dict['Given'][0]
-                else:
-                    person_id = person_id + father_dict['Given'][given_num][0]
-            person_id = person_id + father_dict['BirthYear']
-
-            if os.path.isfile(folders_path + '/' + person_id + '.jpg'): #photo of the father
-                                              #    - father's position and link
-                strFatherPic = strTDCenter + conClose + conImageSrc + "\"" + "../" +\
-                               person_id + "/" + person_id\
-                               + ".jpg\"" + strWidth + conClose + conSlashTD
-            else:#there is not an entry for the father - no father's position and no link
-                strFatherPic = strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                               + "\"" + strWidth + conClose + conSlashTD
-
-        else: #even if the father doesn't exist,
-              #I need to generate the html to fill the space
-            strFatherPic = strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                           + "\"" + strWidth + conClose + conSlashTD
-
-        if len(person_id) > 0 \
-               and os.path.isdir(folders_path + '/' + person_id): # there is a web folder for the father
-            blnHref = 1
-        else:
-            blnHref = 0
-
-        blnName = 1 if person_id != '' else 0 # the father's name exists in the rootsmagic db
-
-
-        father_full_name = ''
-        if blnName ==1:
-            father_full_name = father_dict['Surname']
-            for given_num in range(len(father_dict['Given'])):
-                if given_num == 0:
-                    father_full_name = father_full_name + ', ' + father_dict['Given'][0]
-                else:
-                    father_full_name = father_full_name + ' ' + father_dict['Given'][given_num][0]
-            #print('father_full_name = ', father_full_name)
-            strFatherName = strTDCenter + conClose + conNameFmt + father_full_name\
-                                     + conNameFmtClose + conAEnd + conSlashTD
-            strF32 = strTDCenter + strColor + conClose + conSlashTD
-            strF33 = strTDCenter + strColor + conClose + conSlashTD
-            strF43 = strTDCenter + strColor + conClose + conSlashTD
-            if blnHref ==1:
-                strFatherName = strTDCenter + conClose + conHref + "\"" + "../" +\
-                                person_id + "/index.html" + "\"" + conClose\
-                                + conNameFmt + father_full_name + conNameFmtClose\
-                                + conAEnd + conSlashTD
-                strF32 = strTDCenter + strColor + conClose + conHref\
-                  + "../" + person_id + conHGlass + conClose + conImageSrc\
-                  + strLtArrow + conClose + conAEnd + conSlashTD
-            else: pass
-
-        else:
-            strFatherName = strTDCenter + conClose + conNameFmt + father_full_name\
-                            + conNameFmtClose + conSlashTD
-            strF32 = strTDCenter + conClose + conSlashTD
-            strF33 = strTDCenter + conClose + conSlashTD
-            strF43 = strTDCenter + conClose + conSlashTD
-
-        #Build mother
-        conDummyPic = conDummyFemalePic
-        if parents['Mother']['Surname'] != '' or parents['Mother']['Given'] != '':  # Does the mother exist?
-             #  - there is a mother's name in the person's entry
-            mother_dict = parents['Mother']
-            for given_num in range(len(mother_dict['Given'])):
-                if given_num == 0:
-                    person_id = person_id + mother_dict['Given'][0]
-                else:
-                    person_id = person_id + mother_dict['Given'][given_num][0]
-            person_id = person_id + mother_dict['BirthYear']
-
-            if os.path.isfile(folders_path + '/' + person_id + '.jpg'): #photo of the mother
-                                              #    - mother's position and link
-                strMotherPic = strTDCenter + conClose + conImageSrc + "\"" + "../" +\
-                               person_id + "/" + person_id\
-                               + ".jpg\"" + strWidth + conClose + conSlashTD
-            else:#there is not an entry for the mother - no mother's position and no link
-                strMotherPic = strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                               + "\"" + strWidth + conClose + conSlashTD
-
-        else: #even if the mother doesn't exist,
-              #I need to generate the html to fill the space
-            strMotherPic = strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                           + "\"" + strWidth + conClose + conSlashTD
-
-        if len(person_id) > 0 \
-               and os.path.isdir(folders_path + '/' + person_id): # there is a web folder for the mother
-            blnHref = 1
-        else:
-            blnHref = 0
-
-        blnName = 1 if person_id != '' else 0 # the mother's name exists in the rootsmagic db
-
-
-
-        mother_full_name = ''
-        if blnName ==1:
-            mother_full_name = mother_dict['Surname']
-            for given_num in range(len(mother_dict['Given'])):
-                if given_num == 0:
-                    mother_full_name = mother_full_name + ', ' + mother_dict['Given'][0]
-                else:
-                    mother_full_name = mother_full_name + ' ' + mother_dict['Given'][given_num][0]
-            #print('mother_full_name = ', mother_full_name)
-            strMotherName = strTDCenter + conClose + conNameFmt + mother_full_name\
-                                     + conNameFmtClose + conAEnd + conSlashTD
-            strM63 = strTDCenter + strColor + conClose + conSlashTD
-            strM72 = strTDCenter + strColor + conClose + conSlashTD
-            strM73 = strTDCenter + strColor + conClose + conSlashTD
-            if blnHref ==1:
-                strMotherName = strTDCenter + conClose + conHref + "\"" + "../" +\
-                                person_id + "/index.html" + "\"" + conClose\
-                                + conNameFmt + mother_full_name + conNameFmtClose\
-                                + conAEnd + conSlashTD
-                strM72 = strTDCenter + strColor + conClose + conHref\
-                  + "../" + person_id + conHGlass + conClose + conImageSrc\
-                  + strLtArrow + conClose + conAEnd + conSlashTD
-            else: pass
-
-        else:
-            strMotherName = strTDCenter + conClose + conNameFmt + mother_full_name\
-                            + conNameFmtClose + conSlashTD
-            strM63 = strTDCenter + conClose + conSlashTD
-            strM72 = strTDCenter + conClose + conSlashTD
-            strM73 = strTDCenter + conClose + conSlashTD
-
-    # Father or Mother - if father's or mother's name exists do maroon and parent's heading
-    #                   - blnFatherOrMother
-        if (len(father_full_name) > 0) or (len(mother_full_name)) > 0 :
-            strParentHd = "<h2>Grandparents</h2>"
-            strFM53 = strTDCenter + strColor + conClose + conSlashTD
-            strFM54 = strTDCenter + strColor + conClose + conSlashTD
-        else:
-            strParentHd = ""
-            strFM53 = strTDCenter + conClose + conSlashTD
-            strFM54 = strTDCenter + conClose + conSlashTD
-
-
-    # children
-        print('person_facts = ', person_facts)
-        childList = rmagic.fetch_children_from_ID(\
-                                    self._tables['ChildTable'],\
-                                    self._tables['NameTable'],\
-                                    self._tables['PersonTable'],\
-                                    self._tables['FamilyTable'],\
-                                    person_facts['OwnerID'])
-        #print('children = ', children)
-        childNum = len(childList) #number of children
-
-    # Child 1
-        strChildPicList = []
-        strPic7 = ['','']     # These aren't used until child 3+
-        strName7 = ['','']    # These aren't used until child 3+
-        strName8 = ['','']    # These aren't used until child 3+
-        if childNum >= 1:
-            intchildNum = 0 # List index to get to children
-            # Extract the record for the first child:
-
-            childDict = childList[intchildNum]
-            # start building the person_id for this child: LastGivenIYYYY
-            person_id = childDict['Surname']
-            child_full_name = childDict['Surname']
-            for given_num in range(len(childDict['Given'])):
-                if given_num == 0:
-                    person_id = person_id + childDict['Given'][0]
-                    child_full_name = child_full_name + ', ' + childDict['Given'][0]
-                else:
-                    person_id = person_id + childDict['Given'][given_num]
-                    child_full_name = child_full_name + ' ' + childDict['Given'][given_num][0]
-            person_id = person_id + childDict['BirthYear']
-            person_id = person_id.replace('.','')
-            print( 'child 1 name = ', child_full_name, '   person_id = ', person_id)
-
-
-            person_sex = rmagic.fetch_sex_from_ID(\
-                                    self._tables['PersonTable'],\
-                                    childDict['OwnerID'])
-            conDummyPic = conDummyMalePic if person_sex == "male" else conDummyFemalePic
-
-            if os.path.isfile(folders_path + '/' + person_id + '.jpg'):
-                strChildPicList.append(strTDCenter + conClose + conImageSrc + "\"" + "../"\
-                                       + person_id + "/" + person_id + '.jpg' + "\""\
-                                       + strWidth + conClose + conSlashTD)
+            headerList.append('    <title>' + person_facts['FullName'] + '</title>' + "\n")
+            headerList.append('    <link href="../css/individual.css" type="text/css" rel="stylesheet" />' + "\n")
+            headerList.append('    <style type="text/css">' "\n")
+            headerList.append('    /*<![CDATA[*/' + "\n")
+            headerList.append(' div.ReturnToTop {text-align: right}' + "\n")
+            headerList.append('    /*]]>*/' + "\n")
+            headerList.append("    </style>\n")
+            headerList.append("</head>\n")
+            headerList.append('<body background="../images/back.gif">' + "\n")
+            buildString = '    <h1><a name="Top"></a>' + person_facts['FullName']
+            if int(person_facts['BirthYear']) == 0:       #if not birth year then pass
+                pass
             else:
-                strChildPicList.append(strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                                       + "\"" + strWidth + conClose + conSlashTD)
-        else:
-            pass
+                buildString = buildString + ' - ' + person_facts['BirthYear']
 
+            if int(person_facts['DeathYear']) == 0:       # if no death year then pass
+                pass
+            else:
+                buildString = buildString + ' - ' + person_facts['DeathYear']
 
+            buildString = buildString + "</h1>\n"
+            headerList.append(buildString)
 
-        if len(person_id) > 0 \
-               and os.path.isdir(folders_path + '/' + person_id): # there is a web folder for this person
-            blnHref = 1
-        else:
-            blnHref = 0
+            hourglasshtmlList = headerList
 
-        print('childDict = ', childDict)
-        blnName = 1 if len(childDict) > 0 else 0
+            hourglasshtmlList.append('<TABLE border="0" cellspacing="0" cellpadding="0" align="center">\n')
 
-        blnChildExists = []
-        blnChildExists.append(blnName)
+            hourglass_table = {}
 
-        strChildNameList = []
-        strChildLinkList = []
-        if blnName :
-            if blnHref :    #add link to name and right arrow to bar
-                strChildNameList.append(strTDCenter + conClose + conHref + "\"" + "../"\
-                                        + person_id + "/index.html" + "\""\
-                                        + conClose + conNameFmt + child_full_name +\
-                                        conNameFmtClose + conAEnd + conSlashTD)
-                strChildLinkList.append(strTDCenter+ strColor+ conClose+ conHref\
-                                        + "../"+ person_id + conHGlass\
-                                        + conClose+ conImageSrc + strRtArrow + conClose\
-                                        + conAEnd+ conSlashTD)
-            else: #No link for the child's name and no right arrow
-                strChildNameList.append(strTDCenter+ conClose+ conNameFmt\
-                                       + child_full_name + conNameFmtClose+ conAEnd\
-                                       + conSlashTD)
-                strChildLinkList.append(strTDCenter+ strColor+ conClose+ conSlashTD)
-        else: #No child's name and no index file
-            strChildNameList.append(strTDCenter+ conClose+ conSlashTD)
-            strChildLinkList.append(strTDCenter+ strColor+ conClose+ conSlashTD)
+            # Row 1
+            hourglass_table['c1r1'] = '    <td align="center "><h2>Grandparents</h2></td><!--c1r1-->\n'
+            hourglass_table['c2r1'] = '    <td align="center ">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td><!--c2r1-->\n'
+            hourglass_table['c3r1'] = '    <td align="center ">&nbsp; &nbsp; &nbsp;</td><!--c3r1-->\n'
+            hourglass_table['c4r1'] = '    <td align="center ">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td><!--c4r1-->\n'
+            hourglass_table['c5r1'] = '    <td align="center "><h2>Parents</h2></td><!--c5r1-->\n'
+            hourglass_table['c6r1'] = '    <td align="center ">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td><!--c6r1-->\n'
+            hourglass_table['c7r1'] = '    <td align="center ">&nbsp; &nbsp; &nbsp;</td><!--c7r1-->\n'
+            hourglass_table['c8r1'] = '    <td align="center ">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td><!--c8r1-->\n'
+            hourglass_table['c9r1'] = '    <td align="center "><h2>Children</h2></td><!--c9r1-->\n'
 
-    # Child 2
-        if childNum >= 2:
-            intchildNum = intchildNum + 1 # List index to get to children
-             # Extract the record for the this child:
-            childDict = childList[intchildNum]
+            for row in range(1,21):
+                key = 'c0r' + str(row)
+                hourglass_table[key] = '  <tr><!--' + key + '-->\n'
 
-            # start building the person_id for this child: LastGivenIYYYY
-            person_id = childDict['Surname']
-            child_full_name = childDict['Surname']
-            for given_num in range(len(childDict['Given'])):
-                if given_num == 0:
-                    person_id = person_id + childDict['Given'][0]
-                    child_full_name = child_full_name + ', ' + childDict['Given'][0]
+                key = 'c10r' + str(row)
+                hourglass_table[key] = '  </tr><!--' + key + '-->\n'
+
+            for column in range(1,10):
+                for row in range(2,21):
+                    key = 'c' + str(column) + 'r' + str(row)
+                    hourglass_table[key] = '    <td align="center "></td><!--' + key + '-->\n'
+
+            if len(person_facts) == 0:
+                f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
+                f.write('*****build_web_pages line 394****** person = ', person + '\n')
+                f.close()
+            else:
+                # c5r4 target person picture
+                if os.path.isfile(folders_path + '/' + person_facts['GenWebID'] \
+                                    + '/' + person_facts['GenWebID'] + '.jpg'):
+                    hourglass_table['c5r4'] = '    <td align="center "><img src="../' + person_facts["GenWebID"] + '/' \
+                        + person_facts["GenWebID"] + '.jpg" height="75"></td><!--c5r4-->\n'
                 else:
-                    person_id = person_id + childDict['Given'][given_num]
-                    child_full_name = child_full_name + ' ' + childDict['Given'][given_num][0]
-            person_id = person_id + childDict['BirthYear']
-            person_id = person_id.replace('.','')
-            print( 'child 1 name = ', child_full_name, '   person_id = ', person_id)
+                    hourglass_table['c5r4'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c5r4-->\n'
 
+                # c5r5 target person name and link
+                hourglass_table['c5r5'] = '    <td align="center "><a href="index.html"><p>' + person_facts["FullName"] + '</p></a></td><!--c5r5-->\n'
 
-            person_sex = rmagic.fetch_sex_from_ID(\
-                                    self._tables['PersonTable'],\
-                                    childDict['OwnerID'])
-            conDummyPic = conDummyMalePic if person_sex == "male" else conDummyFemalePic
+            #add grandparents
+                        #Build father - possibilities are that:
+            #                    - there is no father's name in the person's entry
+            #                                   - father's position empty and no link
+            #                    - there is a father's name in the person's entry
+            #                                   - father's position (if no record, no name available)
+            #                    - there is a record for the father
+            #                                   - father's position and link
+            #                    - there is not a record for the father
+            #                                   - no father's position and no link
+            #Need to do three things here
+            # - if I have the person's name, use it
+            # - if there is a person_id for the person, use it
+            # - if neither, don't use maroon
+            grandparents = rmagic.fetch_parents_from_ID(\
+                                        self._tables['PersonTable'],\
+                                        self._tables['NameTable'],\
+                                        self._tables['FamilyTable'],\
+                                        person_facts['OwnerID'])
 
+            # preload the silhouette in case grandparents are unknown
+            hourglass_table['c1r2'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r2-->\n'
+            hourglass_table['c1r3'] = '    <td align="center "><p>unknown</p></a></td><!--c1r3-->\n'
+            hourglass_table['c2r3'] = '    <td align="center " bgcolor="maroon "></td><!--c2r3-->\n'
+            hourglass_table['c3r3'] = '    <td align="center " bgcolor="maroon "></td><!--c3r3-->\n'
+            hourglass_table['c3r4'] = '    <td align="center " bgcolor="maroon "></td><!--c3r4-->\n'
+            hourglass_table['c3r5'] = '    <td align="center " bgcolor="maroon "></td><!--c3r5-->\n'
+            hourglass_table['c4r5'] = '    <td align="center " bgcolor="maroon "></td><!--c4r5-->\n'
+            hourglass_table['c1r6'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r6-->\n'
+            hourglass_table['c1r7'] = '    <td align="center "><p>unknown</p></a></td><!--c1r7-->\n'
+            hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "></td><!--c2r7-->\n'
+            hourglass_table['c3r7'] = '    <td align="center " bgcolor="maroon "></td><!--c3r7-->\n'
+            hourglass_table['c3r6'] = '    <td align="center " bgcolor="maroon "></td><!--c3r6-->\n'
+            hourglass_table['c3r5'] = '    <td align="center " bgcolor="maroon "></td><!--c3r5-->\n'
+            hourglass_table['c4r5'] = '    <td align="center " bgcolor="maroon "></td><!--c4r5-->\n'
 
+            debug = 'no'
+            if person_facts['OwnerID'] == '2':
+                debug = 'yes'
+                print('person = ', person)
+                print('********* grandparents = ', grandparents)
+                print('********* len(grandparents) = ', len(grandparents))
 
-            if os.path.isfile(folders_path + '/' + person_id + '.jpg'):
-                strChildPicList.append(strTDCenter + conClose + conImageSrc + "\"" + "../"\
-                                       + person_id + "/" + person_id + '.jpg' + "\""\
-                                       + strWidth + conClose + conSlashTD)
-            else:
-                strChildPicList.append(strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                                       + "\"" + strWidth + conClose + conSlashTD)
-        else:
-            pass
-
-        if len(childDict) > 0 \
-            and os.path.isdir(folders_path + '/' + person_id):  # there is a web folder for the child
-            blnHref = 1
-        else:
-            blnHref = 0
-
-
-        blnName = 1 if len(childDict) > 0 else 0  # the child name exists in the record
-
-        blnChildExists.append(blnName)
-
-        if blnName :
-            if blnHref :   #add link to name and right arrow to bar
-                strChildNameList.append(strTDCenter + conClose + conHref + "\"" + "../" +\
-                                        person_id + "/index.html" + "\"" +\
-                                        conClose + conNameFmt + child_full_name +\
-                                        conNameFmtClose + conAEnd + conSlashTD)
-                strChildLinkList.append(strTDCenter + strColor + conClose + conHref\
-                                        + "../" + person_id + conHGlass\
-                                        + conClose + conImageSrc + strRtArrow + conClose\
-                                        + conAEnd+ conSlashTD)
-                strC2_58 = strTDCenter + strColor + conClose + conHref + "../" +\
-                           person_id + conHGlass + conClose + conImageSrc\
-                           + strRtArrow + conClose + conAEnd+ conSlashTD
-                #note that strC2_58 == strChildLinkList that was appended in the previous line
-            else:  #No link for the child's name and no right arrow
-                strChildNameList.append(strTDCenter + conClose + conNameFmt\
-                                       + child_full_name + conNameFmtClose + conAEnd\
-                                       + conSlashTD)
-                strChildLinkList.append(strTDCenter + strColor + conClose + conSlashTD)
-                strC2_58 = strTDCenter + strColor + conClose + conSlashTD
-        else: #No child's name and no index file
-            strChildNameList.append(strTDCenter + conClose + conSlashTD)
-            strChildLinkList.append(strTDCenter + strColor + conClose + conSlashTD)
-            strC2_58 = strTDCenter + conClose + conSlashTD
-
-    # Child 3 through childNum
-        for intchildNum in range(2,childNum):
-            # Extract the record for the this child:
-            childDict = childList[intchildNum]
-            print( 'childs name = ', childDict['name'])
-
-            # start building the person_id for this child: LastGivenIYYYY
-            person_id = childDict['Surname']
-            child_full_name = childDict['Surname']
-            for given_num in range(len(childDict['Given'])):
-                if given_num == 0:
-                    person_id = person_id + childDict['Given'][0]
-                    child_full_name = child_full_name + ', ' + childDict['Given'][0]
+            if grandparents['Father']['FullName'] != '':  # grandfather exists
+                # c1r2 target person picture
+                if os.path.isfile(folders_path + '/' + grandparents['Father']['GenWebID'] \
+                                    + '/' + grandparents['Father']['GenWebID'] + '.jpg'):
+                    hourglass_table['c1r2'] = '    <td align="center "><img src="../' \
+                                            + grandparents['Father']["GenWebID"] + '/' \
+                                            + grandparents['Father']["GenWebID"] \
+                                            + '.jpg" height="75"></td><!--c1r2-->\n'
                 else:
-                    person_id = person_id + childDict['Given'][given_num]
-                    child_full_name = child_full_name + ' ' + childDict['Given'][given_num][0]
-            person_id = person_id + childDict['BirthYear']
-            person_id = person_id.replace('.','')
-            print( 'child 1 name = ', child_full_name, '   person_id = ', person_id)
+                    #print(folders_path + '/' + grandparents['Father']['GenWebID'] \
+                    #                + '/' + grandparents['Father']['GenWebID'] + '.jpg')
+                    hourglass_table['c1r2'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r2-->\n'
 
+                # c1r3 target person name and link
+                hourglass_table['c1r3'] = '    <td align="center "><a href=../' \
+                        + grandparents['Father']["GenWebID"] + '/"index.html"><p>' \
+                        + grandparents['Father']['FullName'] + '</p></a></td><!--c1r3-->\n'
 
-            person_sex = rmagic.fetch_sex_from_ID(\
-                                    self._tables['PersonTable'],\
-                                    childDict['OwnerID'])
-            conDummyPic = conDummyMalePic if person_sex == "male" else conDummyFemalePic
+                # c2r3 add arrow to select grandfather as new target
+                hourglass_table['c2r3'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
+                                        + grandparents['Father']["GenWebID"] \
+                                        + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r3-->\n'
 
+                # c3r3 add maroon cell
+                hourglass_table['c3r3'] = '    <td align="center " bgcolor="maroon "></td><!--c3r3-->\n'
 
-            if os.path.isfile(folders_path + '/' + person_id + '.jpg'):
-                strChildPicList.append(strTDCenter + conClose + conImageSrc + "\"" + "../"\
-                                       + person_id + "/" + person_id + '.jpg' + "\""\
-                                       + strWidth + conClose + conSlashTD)
-            else:
-                strChildPicList.append(strTDCenter + conClose + conImageSrc + "\"" + conDummyPic\
-                                       + "\"" + strWidth + conClose + conSlashTD)
+                # c3r4 add maroon cell
+                hourglass_table['c3r4'] = '    <td align="center " bgcolor="maroon "></td><!--c3r4-->\n'
 
-            blnHref = 1 if len(childDict) > 0 else 0    # the folder exists for the child
+                # c3r5 add maroon cell
+                hourglass_table['c3r5'] = '    <td align="center " bgcolor="maroon "></td><!--c3r5-->\n'
 
-            # the child name exists in the parents record:
-            if len(childDict[intchildNum]) > 0:
-                blnName = 1
-            else:
-                blnName = 0
-
-            blnChildExists.append(blnName)
-            if blnName :
-                strPic7.append(strTDCenter + strColor + conClose + conSlashTD)
-                if blnHref:
-                    strChildNameList.append(strTDCenter + conClose + conHref + "\"" + "../" +\
-                                            person_id + "/index.html" + "\""\
-                                            + conClose + conNameFmt + child_full_name +
-                                            conNameFmtClose + conAEnd + conSlashTD)
-                    strChildLinkList.append(strTDCenter + strColor + conClose + conHref\
-                                        + "../" + person_id + conHGlass\
-                                        + conClose + conImageSrc + strRtArrow + conClose\
-                                        + conAEnd+ conSlashTD)
-                    strName7.append(strTDCenter + strColor + conClose + conSlashTD)
-                    strName8.append(strTDCenter + strColor + conClose + conHref + "../"\
-                                    + person_id + conHGlass + conClose +\
-                                    conImageSrc + strRtArrow + conClose + conAEnd+ conSlashTD)
-                else :
-                    strChildNameList.append(strTDCenter + conClose + conNameFmt +\
-                                            child_full_name + conNameFmtClose +\
-                                            conAEnd + conSlashTD)
-                    strChildLinkList.append(strTDCenter + strColor + conClose + conSlashTD)
-                    strName7.append(strTDCenter + strColor + conClose + conSlashTD)
-                    strName8.append(strTDCenter + strColor + conClose + conSlashTD)
-            else:
-                strChildNameList.append(strTDCenter + conClose + conSlashTD)
-                strPic7.append(strTDCenter + conClose + conSlashTD)
-                strName7.append(strTDCenter + conClose + conSlashTD)
-                strName8.append(strTDCenter + conClose + conSlashTD)
-
-    # Spouse 1 through intSpouseCnt
-        print('person_facts = ', person_facts)
-        spouseList = rmagic.fetch_spouses_from_ID(\
-                                    self._tables['NameTable'],\
-                                    self._tables['PersonTable'],\
-                                    self._tables['FamilyTable'],\
-                                    person_facts['OwnerID'])
-        #print('spouses = ', spouses)
-        spouseNum = len(spouseList) #number of spouses
-
-
-        strSpousePicList = []
-        strSpouseNameList = []
-        strSpouseLinkList = []
-        #fill the lists with dummy values in case I don't need them all
-        for intSpouseNum in range(10):
-            strSpousePicList.append(strTDCenter + conClose + conImageSrc + "\"" + conDummyPic +\
-                                    "\"" + strWidth + conClose + conSlashTD)
-            strSpouseNameList.append(strTDCenter + conClose + conSlashTD)
-
-        print( 'range(spouseNum) = ', range(spouseNum))
-        for intSpouseNum in range(spouseNum):
-            # Extract the record for the this spouse:
-            spouseDict = spouseList[intSpouseNum]
-
-            # start building the person_id for this child: LastGivenIYYYY
-            person_id = spouseDict['Surname']
-            spouse_full_name = spouseDict['Surname']
-            for given_num in range(len(spouseDict['Given'])):
-                if given_num == 0:
-                    person_id = person_id + spouseDict['Given'][0]
-                    spouse_full_name = spouse_full_name + ', ' + spouseDict['Given'][0]
-                else:
-                    person_id = person_id + spouseDict['Given'][given_num]
-                    spouse_full_name = spouse_full_name + ' ' + spouseDict['Given'][given_num][0]
-            person_id = person_id + spouseDict['BirthYear']
-            person_id = person_id.replace('.','')
-            print( 'spouse name = ', spouse_full_name, '   person_id = ', person_id)
-
-            # build spouse pictures list
-            conDummyPic = conDummyFemalePic
-            if os.path.isfile(folders_path + '/' + person_id + '.jpg'):
-                strSpousePicList[intSpouseNum] = strTDCenter + conClose + conImageSrc + "\"" + "../" +\
-                                                 person_id + "/" + person_id\
-                                                 + '.jpg' + "\"" + strWidth + conClose + conSlashTD
-            else:
-                strSpousePicList[intSpouseNum]=strTDCenter + conClose + conImageSrc + "\"" + conDummyPic +\
-                                                "\"" + strWidth + conClose + conSlashTD
-
-            blnHref = 1 if len(spouseDict) > 0 else 0    # the folder exists for the spouse
-
-            # build spouse fule names list
-            blnName = 1 if len(spouse_full_name) > 0 else 0
-
-            if blnName :
-                strSpouseNameList.append(strTDCenter + conClose + conNameFmt + spouse_full_name\
-                                         + conNameFmtClose + conAEnd + conSlashTD)
-                if blnHref :
-                    strSpouseNameList[intSpouseNum] = strTDCenter + conClose + conHref + "\"" + "../" +\
-                                             person_id + "/index.html" + "\"" + conClose\
-                                             + conNameFmt + spouse_full_name + conNameFmtClose +\
-                                             conAEnd + conSlashTD
-                    strSpouseLinkList.append(strTDCenter + conClose + con3Space + conHref + "\"" + "../" +\
-                                             person_id + conHGlass + conClose + conImageSrc\
-                                             + strSpouseArrow + conClose + conAEnd + conSlashTD)
-                else:
-                    strSpouseLinkList.append(strTDCenter + conClose + conSlashTD)
+                # c4r5 add maroon cell
+                hourglass_table['c4r5'] = '    <td align="center " bgcolor="maroon "></td><!--c4r5-->\n'
 
             else:
-                strSpouseNameList.append(strTDCenter + conClose + conNameFmt + spouse_full_name +\
-                                         conNameFmtClose + conSlashTD)
+                pass # don't add any content
 
-    # end of spouses
+            if grandparents['Mother']['FullName'] != '':  # grandmother exists
+                # c1r6 target person picture
+                if os.path.isfile(folders_path + '/' + grandparents['Mother']['GenWebID'] \
+                                    + '/' + grandparents['Mother']['GenWebID'] + '.jpg'):
+                    hourglass_table['c1r6'] = '    <td align="center "><img src="../' \
+                                            + grandparents['Mother']["GenWebID"] + '/' \
+                                            + grandparents['Mother']["GenWebID"] \
+                                            + '.jpg" height="75"></td><!--c1r6-->\n'
+                else:
+                    hourglass_table['c1r6'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r6-->\n'
 
-    #Body
-        hourglasshtmlList.append("<TABLE border=" + "\"" + "0" + "\"" + " cellspacing=" + "\"" + "0" + "\"" + " cellpadding=" + "\"" + "0" + "\"" + " align=" + "\"" + "center" + "\"" + ">")
+                # c1r7 target person name and link
+                hourglass_table['c1r7'] = '    <td align="center "><a href = ../' \
+                        + grandparents['Mother']["GenWebID"] + '/"index.html"><p>' \
+                        + grandparents['Mother']['FullName'] + '</p></a></td><!--c1r7-->\n'
+                if debug == 'yes':
+                        print('hourglass_table[c1r7] = ', hourglass_table['c1r7'])
 
-    #1st Row - sets the column widths - columns 1 thru 9 (0 through 8)
-        strHTMLBody = []
-        strHTMLBody.append(strTDCenter + conClose + strParentHd + conSlashTD + "\n")
-        strHTMLBody.append(strTDCenter + conClose + con6Space + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + con3Space + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + con6Space + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + "<h2>Parents</h2>" + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + con6Space + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + con3Space + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + con6Space + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + "<h2>Children</h2>" + conSlashTD)
+                # c2r7 add arrow to select grandmother as new target
+                hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
+                                        + grandparents['Mother']["GenWebID"] \
+                                        + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r7-->\n'
 
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add first row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
+                # c3r7 add maroon cell
+                hourglass_table['c3r7'] = '    <td align="center " bgcolor="maroon "></td><!--c3r7-->\n'
 
-    #2nd Row - father and 1st child photos
-        strHTMLBody = []
-        intChild = 0
-        strHTMLBody.append(strFatherPic)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strChildPicList[intChild])
+                # c3r6 add maroon cell
+                hourglass_table['c3r6'] = '    <td align="center " bgcolor="maroon "></td><!--c3r6-->\n'
 
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add second row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
+                # c3r5 add maroon cell
+                hourglass_table['c3r5'] = '    <td align="center " bgcolor="maroon "></td><!--c3r5-->\n'
 
-    #3rd Row - father and 1st child names
-        strHTMLBody = []
+                # c4r5 add maroon cell
+                hourglass_table['c4r5'] = '    <td align="center " bgcolor="maroon "></td><!--c4r5-->\n'
 
-        strHTMLBody.append(strFatherName)
-        strHTMLBody.append(strF32)
-        strHTMLBody.append(strF33)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        if blnChildExists[intChild]:
-            strHTMLBody.append(strTDCenter + strColor + conClose + conSlashTD)
-            strHTMLBody.append(strChildLinkList[intChild])
-        else :
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
+            else:
+                pass # don't add any content
 
-        strHTMLBody.append(strChildNameList[intChild])
+            #add spouses
+            spouseList = rmagic.fetch_spouses_from_ID(\
+                                        self._tables['NameTable'],\
+                                        self._tables['PersonTable'],\
+                                        self._tables['FamilyTable'],\
+                                        person_facts['OwnerID'])
 
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add third row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
+            row = 6
+            debug = 'no'
+            if person_facts['OwnerID'] == '':
+                debug = 'yes'
+                print('person = ', person)
+                print('********* spouseList = ', spouseList)
+                print('********* len(spouseList) = ', len(spouseList))
+            for spouse_num in range(len(spouseList)):
+                if debug == 'yes':
+                    print('********* spouse_num = ', spouse_num)
 
-    #4th Row - self and 2nd child photos
-        strHTMLBody = []
-        intChild = intChild + 1
-        print('intChild = ', intChild, 'len(strChildPicList) = ', len(strChildPicList))
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strF43)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strSelfPic)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        if blnChildExists[intChild]:
-            strHTMLBody.append(strTDCenter + strColor + conClose + conSlashTD)
-        else:
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
+                # c5r6,8,10,12 target person picture
+                if len(spouseList[spouse_num]) > 0:
+                    key = 'c5r' + str(row)
+                    if debug == 'yes':
+                        print(folders_path + '/' + spouseList[spouse_num]['GenWebID'] + '/' + spouseList[spouse_num]['GenWebID'] + '.jpg')
+                    if os.path.isfile(folders_path + '/' + spouseList[spouse_num]['GenWebID'] \
+                                        + '/' + spouseList[spouse_num]['GenWebID'] + '.jpg'):
+                        hourglass_table[key] = '    <td align="center "><img src="../' \
+                                                + spouseList[spouse_num]["GenWebID"] + '/' \
+                                                + spouseList[spouse_num]["GenWebID"] \
+                                                + '.jpg" height="75"></td><!--' + key + '-->\n'
+                        if debug == 'yes':
+                            print('hourglass_table[' + key + '] = ', hourglass_table[key])
+                    else:
+                        hourglass_table[key] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--' + key + '-->\n'
 
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        if intChild <= len(strChildPicList) - 1:
-            strHTMLBody.append(strChildPicList[intChild])
+                    row = row + 1
+                    # c5r7,9,11,13 target person name and link
+                    key = 'c5r' + str(row)
+                    hourglass_table[key] = '    <td align="center "><a href="../' \
+                            + spouseList[spouse_num]["GenWebID"] + '/index.html"><p>' \
+                            + spouseList[spouse_num]["FullName"] + '</p></a></td><!--' + key + '-->\n'
 
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add fourth row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
+                    # c4r7,9,11,13 add arrow to select spouse as new target
+                    key = 'c4r' + str(row)
+                    hourglass_table[key] = '    <td align="center"><a href= ../' \
+                                            + spouseList[spouse_num]["GenWebID"] \
+                                            + '/HourGlass.html><img src=../images/Right_Arrow_Maroon.gif></a></td><!--' + key + '-->\n'
+                    if debug == 'yes':
+                        print('hourglass_table[' + key + '] = ', hourglass_table[key])
+                    row = row + 1
 
-    #5th Row - self and 2nd child names
-        strHTMLBody = []
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strFM53)
-        strHTMLBody.append(strFM54)
-        strHTMLBody.append(strSelfName)
-        if blnChildExists[intChild]:
-            strHTMLBody.append(strTDCenter + strColor + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + strColor + conClose + conSlashTD)
-        else :
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
+            #add children
+            childList = rmagic.fetch_children_from_ID(\
+                                        self._tables['ChildTable'],\
+                                        self._tables['NameTable'],\
+                                        self._tables['PersonTable'],\
+                                        self._tables['FamilyTable'],\
+                                        person_facts['OwnerID'])
 
-        strHTMLBody.append(strC2_58)
-        if intChild <= len(strChildPicList) - 1:
-            strHTMLBody.append(strChildNameList[intChild])
+            #add the table to the HourGlass
+            for row in range(1,21):
+                for column in range(0,11):
+                    key = 'c' + str(column) + 'r' + str(row)
+                    hourglasshtmlList.append(hourglass_table[key])
 
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add fifth row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
+            hourglasshtmlList.append('</table>')
+            hourglasshtmlList.append('</body>')
+            hourglasshtmlList.append('</html>')
 
-    #6th Row - Mother, 1st Spouse, and 3rd child photo
-        strHTMLBody = []
-        intSpouse = 0
-        intChild = intChild + 1
-        strHTMLBody.append(strMotherPic)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strM63)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strSpousePicList[intSpouse])
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
+            if os.path.isdir(folders_path + '/' + person_facts['GenWebID']):
+                hourglassFile = open(folders_path + '/' + person_facts['GenWebID'] + '/HourGlass.html', 'w')
 
-        if intChild <= len(strChildPicList) - 1:
-            strHTMLBody.append(strPic7[intChild])
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
+                for row in hourglasshtmlList:
+                    hourglassFile.writelines(row)
 
-        if intChild <= len(strChildPicList) - 1:
-            strHTMLBody.append(strChildPicList[intChild])
+                hourglassFile.close()
+            else:
 
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add sixth row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
+                f = open(folders_path + '/zzz_FolderNotFound.txt','a')
+                f.write('*********** folder = ' + person_facts['GenWebID'] + '\n')
+                f.close()
 
-    #7th Row - Mother, 1st Spouse, and 3rd child names
-        strHTMLBody = []
-        strHTMLBody.append(strMotherName)
-        strHTMLBody.append(strM72)
-        strHTMLBody.append(strM73)
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-        strHTMLBody.append(strSpouseNameList[intSpouse])
-        strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-
-        if intChild <= len(strChildPicList) - 1:
-            strHTMLBody.append(strName7[intChild])
-            strHTMLBody.append(strName8[intChild])
-            strHTMLBody.append(strChildNameList[intChild])
-
-        hourglasshtmlList.append(conTR)
-        hourglasshtmlList.append(strHTMLBody)  #add seventh row to the body of the web page
-        hourglasshtmlList.append(conSlashTR)
-
-    #8th+ Row - 2nd Spouse through intSpouseCnt, and 4th child through intChildCnt+2
-        strHTMLBody = []
-        for intSpouseNum in range(1,spouseNum-1):
-            intChild = intChild + 1
-
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strSpousePicList[intSpouseNum])
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            if intChild <= (len(strPic7) - 1) :
-                strHTMLBody.append(strPic7[intChild])
-
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            if intChild <= (len(strChildPicList) - 1) :
-                strHTMLBody.append(strChildPicList[intChild])
-
-            hourglasshtmlList.append(conTR)
-            hourglasshtmlList.append(strHTMLBody)  #add row to the body of the web page
-            hourglasshtmlList.append(conSlashTR)
-
-
-    #9th Row - 2nd Spouse, and 4th child names
-            strHTMLBody = []
-
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strSpouseNameList[intSpouse])
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            if intChild <= (len(strName7) - 1) :
-                strHTMLBody.append(strName7[intChild])
-
-            if intChild <= (len(strName8) - 1) :
-                strHTMLBody.append(strName8[intChild])
-
-            if intChild <= (len(strChildNameList) - 1) :
-                strHTMLBody.append(strChildNameList[intChild])
-
-            hourglasshtmlList.append(conTR)
-            hourglasshtmlList.append(strHTMLBody)  #add next rows to the body of the web page
-            hourglasshtmlList.append(conSlashTR)
-
-    #Row - intChild child through intChildCnt
-        strHTMLBody = []
-
-        for intChild in range(intChild, childNum - 1) :
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strPic7[intChild])
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strChildPic[intChild])
-
-            hourglasshtmlList.append(conTR)
-            hourglasshtmlList.append(strHTMLBody)  #add row to the body of the web page
-            hourglasshtmlList.append(conSlashTR)
-
-    #Row - child names
-            strHTMLBody = []
-            intRow = intRow + 1
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strTDCenter + conClose + conSlashTD)
-            strHTMLBody.append(strName7[intChild])
-            strHTMLBody.append(strName8[intChild])
-            strHTMLBody.append(strChildName[intChild])
-
-            hourglasshtmlList.append(conTR)
-            hourglasshtmlList.append(strHTMLBody)  #add next rows to the body of the web page
-            hourglasshtmlList.append(conSlashTR)
-
-
-
-        for row in hourglasshtmlList:
-            hourglassFile.writelines(row)
-
-        return hourglasshtmlList
+        return
 
 
 def main():

@@ -126,19 +126,65 @@ def fetch_rm_tables(rm_db):
     return roots_magic_db
 
 
-def fetch_person_from_name(name_table, name_dict):
+def fetch_person_from_name(name_table, person_table, name_dict):
     """
-    Given a person's 'Surname', 'Given', 'BirthYear' fetch the NameTable entry
+    Given a person's 'Surname', 'Given', 'Initial', 'BirthYear' fetch the NameTable entry
     for that person. If there is more than one match, they will all be returned
+    The return is of the form:
+        [{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+          'Suffix': '', 'BirthYear': '1949','Prefix': '',
+          'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+          'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+          'FullName': 'Page, Robert Kenneth'}]
+   	where these rootsmagic tags are equivalent ; OwnerID = person_ID
     """
+
+    debug = 'no'
+    if name_dict['Given'] == '' and name_dict['BirthYear'] == '':
+        print('---fetch_person_from_name--- name_dict = ', name_dict)
+        debug = 'yes'
     person_matches = []
     for person in name_table:
         if all((
             person['Surname'].replace(' ', '') == name_dict['Surname'].replace(' ', ''),
+            person['Given'][0] == name_dict['Given'],
             int(person['BirthYear']) == int(name_dict['BirthYear']),
             person['IsPrimary'] == '1',
         )):
+            person['Surname'] = person['Surname'].replace(' ', '')
+            if debug == 'yes':
+                print('---fetch_person_from_name--- person = ', person)
+
+            for target in person_table:
+                if target['PersonID'] == person['OwnerID']:
+                    if debug == 'yes':
+                        print('---fetch_person_from_name--- target = ', target)
+                    person['Sex'] = 'male' if target['Sex'] == '0' else 'female'
+                    break
+
+            names = ''
+            for name in person['Given']:
+                names = names + ' ' + name
+            person['FullName'] = person['Surname'] + ',' + names
+
+
+            genweb_id = person['Surname']
+            for given_num in range(len(person['Given'])):
+                if given_num == 0:
+                    genweb_id = genweb_id + person['Given'][0]
+                else:
+                    genweb_id = genweb_id + person['Given'][given_num][0]
+
+            if person['BirthYear'] == '0':
+                person['BirthYear'] = '0000'
+
+            genweb_id = genweb_id + person['BirthYear']
+            person['GenWebID'] = genweb_id
+
             person_matches.append(person)
+
+            if debug == 'yes':
+                print('---fetch_person_from_name--- person_matches = ', person_matches)
 
     if not person_matches:
         _moduleLogger.debug("No person found: %r", name_dict)
@@ -185,13 +231,63 @@ def fetch_person_from_fuzzy_name(name_table, name_dict, year_error=2):
     return person_matches
 
 
-def fetch_person_from_ID(name_table, id):
+def fetch_person_from_ID(name_table, person_table, id):
     """
     Given a person's PersonID (AKA OwnerID) fetch the NameTable entry for that
     person.
+    The return is of the form:
+        [{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+          'Suffix': '', 'BirthYear': '1949','Prefix': '',
+          'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+          'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+          'FullName': 'Page, Robert Kenneth'}]
     """
+    debug = 'no'
+    if id == '':
+        debug = 'yes'
     for person in name_table:
         if person['OwnerID'] == id and person['IsPrimary'] == '1':
+            if debug == 'yes':
+                print('fetch_person_from_ID person = ', person)
+            for target in person_table:
+                if target['PersonID'] == person['OwnerID']:
+                    person['Sex'] = 'male' if target['Sex'] == '0' else 'female'
+                    break
+
+            names = ''
+            for name in person['Given']:
+                names = names + ' ' + name
+            person['FullName'] = person['Surname'] + ',' + names
+
+
+            genweb_id = person['Surname']
+
+            if debug == 'yes':
+                print('genweb_id0 = ', genweb_id)
+            for given_num in range(len(person['Given'])):
+                if given_num == 0:
+                    genweb_id = genweb_id + person['Given'][0]
+                    if debug == 'yes':
+                        print('genweb_id1 = ', genweb_id)
+                else:
+                    if debug == 'yes':
+                        print('middle = ', middle)
+                    genweb_id = genweb_id + person['Given'][given_num][0]
+                    if debug == 'yes':
+                        print('genweb_id2 = ', genweb_id)
+
+            if person['BirthYear'] == '0':
+                birth_year = '0000'
+            elif len(person['BirthYear']) == 3:
+                birth_year = '0' + person['BirthYear']
+            else:
+                birth_year = person['BirthYear']
+
+            genweb_id = genweb_id + birth_year
+            person['GenWebID'] = genweb_id
+            if debug == 'yes':
+                print('person = ', person)
+                print('++++++++++++++++++++++++++++++++++++++')
             return person
     else:
         _moduleLogger.debug("Person not found: %r", id)
@@ -233,17 +329,19 @@ def fetch_parents_from_ID(person_table, name_table, family_table, person_ID):
         father_ID = ""
         mother_ID = ""
 
-    father = fetch_person_from_ID(name_table, father_ID)
-    mother = fetch_person_from_ID(name_table, mother_ID)
+    father = fetch_person_from_ID(name_table, person_table, father_ID)
+    mother = fetch_person_from_ID(name_table, person_table, mother_ID)
 
     if father == {}:
         father = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
                     'Prefix': '', 'BirthYear': '', 'Nickname': '', \
-                    'Suffix': '', 'Surname': '', 'OwnerID': ''}
+                    'Suffix': '', 'Surname': '', 'OwnerID': '',
+                    'Sex': '', 'GenWebID': '', 'FullName': ''}
     if mother == {}:
         mother = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
                     'Prefix': '', 'BirthYear': '', 'Nickname': '', \
-                    'Suffix': '', 'Surname': '', 'OwnerID': ''}
+                    'Suffix': '', 'Surname': '', 'OwnerID': '',
+                    'Sex': '', 'GenWebID': '', 'FullName': ''}
 
     parents = {'Father': father, 'Mother': mother}
 
@@ -285,7 +383,7 @@ def fetch_spouses_from_ID(name_table, person_table, family_table, person_ID):
     for family, parentalRole in fetch_family_from_ID(person_table, family_table, person_ID):
         spousalRole = "MotherID" if parentalRole == "FatherID" else "FatherID"
         spouse_id = family[spousalRole]
-        spouses.append(fetch_person_from_ID(name_table, spouse_id))
+        spouses.append(fetch_person_from_ID(name_table, person_table, spouse_id))
     return spouses
 
 
@@ -306,7 +404,7 @@ def fetch_children_from_ID(child_table, name_table, person_table,
         family_id = family['FamilyID']
         for child in child_table:
             if family_id == child['FamilyID']:
-                children.append(fetch_person_from_ID(name_table, child['ChildID']))
+                children.append(fetch_person_from_ID(name_table, person_table, child['ChildID']))
     return children
 
 

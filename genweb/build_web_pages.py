@@ -3,6 +3,7 @@
 import os
 import datetime
 import string
+import winsound
 
 from . import rmagic
 
@@ -20,17 +21,23 @@ class build_web_pages(object):
         folders_path = \
             'D:/Family History/Family History CD/Research/Individual_Web_Pages'
         project_dict = self._get_proj_dict_from_xml(folders_path)
+        #print('__init__ **** project_dict = ', project_dict)
         people_ids = sorted(project_dict.keys())
         #generating toc web pages works - uncomment following line when all else is debugged
         #self._generate_toc_web(people_ids,folders_path)
         person_dict = {}
         for person in people_ids:
+            #print('__init__ **** person = ', person)
             if person.lower().lstrip('abcdefghijklmnopqrstuvwxyz').isdigit():
+                #print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))
                 person_dict = project_dict[person]
+                #print('__init__ **** person_dict = ', person_dict)
+                self._generate_all_hourglass_webs(person, folders_path)
                 if person_dict:
                     pass # to generate web pages, uncomment the following line
                     #self._generate_person_web(person, person_dict, folders_path)
-                    self._generate_all_hourglass_webs(person, folders_path)
+        winsound.Beep(500,1000)
+
 
     def _get_proj_dict_from_xml(self,folders_path):
         args = os.listdir(folders_path)
@@ -43,7 +50,6 @@ class build_web_pages(object):
         folder_file_contents = []
         overall_dictionary = {}
         for folder in folders:
-            big_dictionary = {}
             person_id = os.path.basename(folder)
             folder_files = os.listdir(folder)
             #print('folder = ', folder)
@@ -322,7 +328,7 @@ class build_web_pages(object):
         information is my rootsmagic database. Note that "person" is the same
         as person_facts['GenWebID']
         """
-
+        # print('_generate_all_hourglass_webs ***** person = ', person)
         # self._separate_names(person) is of the form:
         # {'BirthYear':'1896','Given':'Archie','Initial':'B', 'Surname':'Abdill'}
         person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'],\
@@ -345,7 +351,7 @@ class build_web_pages(object):
             person_facts = person_facts[0]
 
             #This builds the standard html header I use for the family history files
-            #print('person = ', person)
+            #print('person = ', person, '  OwnerID = ', person_facts['OwnerID'])
             #print('person_facts = ', person_facts)
             headerList = []
             headerList.append("<html>\n")
@@ -461,7 +467,7 @@ class build_web_pages(object):
             hourglass_table['c4r5'] = '    <td align="center " bgcolor="maroon "></td><!--c4r5-->\n'
 
             debug = 'no'
-            if person_facts['OwnerID'] == '2':
+            if person_facts['OwnerID'] == '':
                 debug = 'yes'
                 print('person = ', person)
                 print('********* grandparents = ', grandparents)
@@ -481,14 +487,21 @@ class build_web_pages(object):
                     hourglass_table['c1r2'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r2-->\n'
 
                 # c1r3 target person name and link
-                hourglass_table['c1r3'] = '    <td align="center "><a href=../' \
-                        + grandparents['Father']["GenWebID"] + '/"index.html"><p>' \
-                        + grandparents['Father']['FullName'] + '</p></a></td><!--c1r3-->\n'
+                if os.path.isdir(folders_path + "/" + grandparents['Father']["GenWebID"]):
+                    hourglass_table['c1r3'] = '    <td align="center "><a href=../' \
+                            + grandparents['Father']["GenWebID"] + '/"index.html"><p>' \
+                            + grandparents['Father']['FullName'] + '</p></a></td><!--c1r3-->\n'
+                else:
+                    hourglass_table['c1r3'] = '    <td align="center "><p>' \
+                            + grandparents['Father']['FullName'] + '</p></td><!--c1r3-->\n'
 
                 # c2r3 add arrow to select grandfather as new target
-                hourglass_table['c2r3'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
-                                        + grandparents['Father']["GenWebID"] \
-                                        + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r3-->\n'
+                if os.path.isdir(folders_path + "/" + grandparents['Father']["GenWebID"]):
+                    hourglass_table['c2r3'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
+                                            + grandparents['Father']["GenWebID"] \
+                                            + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r3-->\n'
+                else:
+                    hourglass_table['c2r3'] = '    <td align="center " bgcolor="maroon "></td><!--c2r3-->\n'
 
                 # c3r3 add maroon cell
                 hourglass_table['c3r3'] = '    <td align="center " bgcolor="maroon "></td><!--c3r3-->\n'
@@ -517,16 +530,24 @@ class build_web_pages(object):
                     hourglass_table['c1r6'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r6-->\n'
 
                 # c1r7 target person name and link
-                hourglass_table['c1r7'] = '    <td align="center "><a href = ../' \
-                        + grandparents['Mother']["GenWebID"] + '/"index.html"><p>' \
-                        + grandparents['Mother']['FullName'] + '</p></a></td><!--c1r7-->\n'
+                if os.path.isdir(folders_path + "/" + grandparents['Mother']["GenWebID"]):
+                    hourglass_table['c1r7'] = '    <td align="center "><a href=../' \
+                            + grandparents['Mother']["GenWebID"] + '/"index.html"><p>' \
+                            + grandparents['Mother']['FullName'] + '</p></a></td><!--c1r7-->\n'
+                else:
+                    hourglass_table['c1r7'] = '    <td align="center "><p>' \
+                            + grandparents['Mother']['FullName'] + '</p></td><!--c1r7-->\n'
+
                 if debug == 'yes':
                         print('hourglass_table[c1r7] = ', hourglass_table['c1r7'])
 
                 # c2r7 add arrow to select grandmother as new target
-                hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
-                                        + grandparents['Mother']["GenWebID"] \
-                                        + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r7-->\n'
+                if os.path.isdir(folders_path + "/" + grandparents['Mother']["GenWebID"]):
+                    hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
+                                            + grandparents['Mother']["GenWebID"] \
+                                            + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r7-->\n'
+                else:
+                    hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "></td><!--c2r7-->\n'
 
                 # c3r7 add maroon cell
                 hourglass_table['c3r7'] = '    <td align="center " bgcolor="maroon "></td><!--c3r7-->\n'
@@ -600,6 +621,63 @@ class build_web_pages(object):
                                         self._tables['PersonTable'],\
                                         self._tables['FamilyTable'],\
                                         person_facts['OwnerID'])
+
+            row = 2
+            debug = 'no'
+            if person_facts['OwnerID'] == '':
+                debug = 'yes'
+                print('person = ', person)
+                print('********* childList = ', childList)
+                print('********* len(childList) = ', len(childList))
+            for child_num in range(len(childList)):
+                if debug == 'yes':
+                    print('********* child_num = ', child_num)
+
+                # c9r2, 4, 6, 8, ... 20 target person picture
+                if len(childList[child_num]) > 0:
+                    key = 'c9r' + str(row)
+                    if debug == 'yes':
+                        print(folders_path + '/' + childList[child_num]['GenWebID'] + '/' + childList[child_num]['GenWebID'] + '.jpg')
+                    if os.path.isfile(folders_path + '/' + childList[child_num]['GenWebID'] \
+                                        + '/' + childList[child_num]['GenWebID'] + '.jpg'):
+                        hourglass_table[key] = '    <td align="center "><img src="../' \
+                                                + childList[child_num]["GenWebID"] + '/' \
+                                                + childList[child_num]["GenWebID"] \
+                                                + '.jpg" height="75"></td><!--' + key + '-->\n'
+                        if debug == 'yes':
+                            print('hourglass_table[' + key + '] = ', hourglass_table[key])
+                    else:
+                        hourglass_table[key] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--' + key + '-->\n'
+
+                    # c7r4, 6, 8, ... 20 add maroon cell
+                    if row > 2:
+                        key = 'c7r' + str(row)
+                        hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r4, 6, 8, ... 20-->\n'
+
+                    row = row + 1
+                    # c9r3, 5, 7, ... 19 target person name and link
+                    key = 'c9r' + str(row)
+                    hourglass_table[key] = '    <td align="center "><a href="../' \
+                            + childList[child_num]["GenWebID"] + '/index.html"><p>' \
+                            + childList[child_num]["FullName"] + '</p></a></td><!--' + key + '-->\n'
+
+                    # c7r3, 5, 7, ... 19 add maroon cell
+                    key = 'c7r' + str(row)
+                    hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r3, 5, 7, ... 19-->\n'
+
+                    if row == 5:
+                        # c6r5 add maroon cell
+                        key = 'c6r' + str(row)
+                        hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r5-->\n'
+
+                    # c8r4, 6, 8, ... 20 add arrow to select child as new target
+                    key = 'c8r' + str(row)
+                    hourglass_table[key] = '    <td align="center" bgcolor="maroon"><a href= ../' \
+                                            + childList[child_num]["GenWebID"] \
+                                            + '/HourGlass.html><img src=../images/Right_Arrow.gif></a></td><!--' + key + '-->\n'
+                    if debug == 'yes':
+                        print('hourglass_table[' + key + '] = ', hourglass_table[key])
+                    row = row + 1
 
             #add the table to the HourGlass
             for row in range(1,21):

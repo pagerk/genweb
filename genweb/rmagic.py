@@ -153,7 +153,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
         )):
             person['Surname'] = person['Surname'].replace(' ', '')
             if debug == 'yes':
-                print('---fetch_person_from_name--- person = ', person)
+                print('---fetch_person_from_name--- match person = ', person)
 
             for target in person_table:
                 if target['PersonID'] == person['OwnerID']:

@@ -25,6 +25,7 @@ class build_web_pages(object):
         people_ids = sorted(project_dict.keys())
         #generating toc web pages works - uncomment following line when all else is debugged
         #self._generate_toc_web(people_ids,folders_path)
+        #winsound.Beep(500,1000)
         person_dict = {}
         for person in people_ids:
             #print('__init__ **** person = ', person)
@@ -36,6 +37,7 @@ class build_web_pages(object):
                 if person_dict:
                     pass # to generate web pages, uncomment the following line
                     #self._generate_person_web(person, person_dict, folders_path)
+        winsound.Beep(500,1000)
         winsound.Beep(500,1000)
 
 
@@ -113,7 +115,7 @@ class build_web_pages(object):
         person = {}
         person['BirthYear'] = item.strip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
         item = item.strip('0123456789')
-        if item == '':
+        if debug == 'yes':
             print('date = ',person['BirthYear'], '  name string = ',item)
 
         # Separate the text portion of the file name into a list of names that start
@@ -328,7 +330,9 @@ class build_web_pages(object):
         information is my rootsmagic database. Note that "person" is the same
         as person_facts['GenWebID']
         """
-        # print('_generate_all_hourglass_webs ***** person = ', person)
+        if person == 'BrentMabel1896':
+            print('_generate_all_hourglass_webs ***** person = ', person)
+
         # self._separate_names(person) is of the form:
         # {'BirthYear':'1896','Given':'Archie','Initial':'B', 'Surname':'Abdill'}
         person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'],\
@@ -345,7 +349,11 @@ class build_web_pages(object):
         if len(person_facts) == 0:
             print('person = ', person)
             f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-            f.write('*****build_web_pages line 323****** person = ' + person + '\n')
+            f.write('*****build_web_pages target person section ****** person = ' + person + '\n')
+            possible_matches = rmagic.fetch_person_from_fuzzy_name(self._tables['NameTable'], self._separate_names(person), year_error=2)
+            for match_num in range(len(possible_matches)):
+                f.write('possible match number = ' + str(match_num) + '\n')
+                f.write(str(possible_matches[match_num]['GenWebID']) + '\n')
             f.close()
         else:
             person_facts = person_facts[0]
@@ -416,7 +424,11 @@ class build_web_pages(object):
 
             if len(person_facts) == 0:
                 f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-                f.write('*****build_web_pages line 394****** person = ', person + '\n')
+                f.write('*****build_web_pages hourglass table row #1 ****** person = ', person + '\n')
+                possible_matches = rmagic.fetch_person_from_fuzzy_name(self._tables['NameTable'], self._separate_names(person), year_error=2)
+                for match_num in range(len(possible_matches)):
+                    f.write('possible match number = ' + str(match_num) + '\n')
+                    f.write(str(possible_matches[match_num]['GenWebID']) + '\n')
                 f.close()
             else:
                 # c5r4 target person picture

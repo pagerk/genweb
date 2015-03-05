@@ -24,8 +24,8 @@ class build_web_pages(object):
         #print('__init__ **** project_dict = ', project_dict)
         people_ids = sorted(project_dict.keys())
         #generating toc web pages works - uncomment following line when all else is debugged
-        #self._generate_toc_web(people_ids,folders_path)
-        #winsound.Beep(500,1000)
+        self._generate_toc_web(people_ids,folders_path)
+        winsound.Beep(500,1000)
         person_dict = {}
         for person in people_ids:
             #print('__init__ **** person = ', person)
@@ -33,10 +33,11 @@ class build_web_pages(object):
                 #print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))
                 person_dict = project_dict[person]
                 #print('__init__ **** person_dict = ', person_dict)
+                #_generate_all_hourglass_webs works - uncomment following line when all else is debugged
                 self._generate_all_hourglass_webs(person, folders_path)
                 if person_dict:
                     pass # to generate web pages, uncomment the following line
-                    #self._generate_person_web(person, person_dict, folders_path)
+                    self._generate_person_web(person, person_dict, folders_path)
         winsound.Beep(500,1000)
         winsound.Beep(500,1000)
 
@@ -235,7 +236,7 @@ class build_web_pages(object):
                 #print('----- person_facts = ', person_facts)
                 if len(person_facts) == 0:
                     f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-                    f.write('*****build_web_pages line 208****** person = ', person + '\n')
+                    f.write('*****build_web_pages line 208****** person = ' + person + '\n')
                     f.close()
                     continue
 
@@ -312,14 +313,143 @@ class build_web_pages(object):
         f.close()
         return
 
-    def _generate_person_web(self, person, person_dict):
+    def _generate_person_web(self, genwebid, person_dict, folders_path):
         artifact_ids = sorted(person_dict.keys())
-        person_id_dict = self._separate_names(person)
-        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
-        #print('person = ', person, '----- person_facts = ', person_facts)
+        #print('artifact_ids = ', artifact_ids)
+        person_id_dict = self._separate_names(genwebid)
+        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)[0]
+        #print('genwebid = ', genwebid, '----- person_facts = ', person_facts)
+        folder_path = folders_path + '/' + genwebid
+        #print('folder_path = ', folder_path)
+
+        if not os.path.isdir(folder_path):
+            print('*****build_web_pages ' + folder_path + '**** does not exist****')
+            os.makedirs(folder_path)
+
+
+        f = open(folder_path + '/index.html','w')
+        f.write('<!DOCTYPE html PUBLIC"-//W3C//DTD HTML 4.01 Transitional//EN" >\n')
+        f.write('<html>\n')
+        f.write('\t<head>\n')
+        f.write('\t\t<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />\n')
+        f.write('\t\t<title>Family History</title>\n')
+        f.write('\t\t<link href="../css/individual.css" type="text/css" rel="stylesheet" />\n')
+        f.write('\t\t<style type="text/css">\n')
+        f.write('\t\t/*<![CDATA[*/\n')
+        f.write('\t\tdiv.ReturnToTop {text-align: right}\n')
+        f.write('\t\t/*]]>*/\n')
+        f.write('\t\t</style>\n')
+        f.write('\t</head>\n')
+        f.write('\t<body background="../images/back.gif">\n')
+
+        birth_year = person_facts['BirthYear'] if len(person_facts['BirthYear']) > 2 else '?'
+        death_year = person_facts['DeathYear'] if len(person_facts['DeathYear']) > 2 else '?'
+        f.write('\t\t<h1><a name="Top"></a>' + person_facts["FullName"] + ' - ' + birth_year + ' - ' + death_year + '</h1>\n')
+        f.write('\t\t<a href= "HourGlass.html"><img src="../images/family.bmp"></a>\n')
+
+        index_tbl_lines = []
+        index_tbl_lines.append('\t\t<!-- Index table -->\n')
+        index_tbl_lines.append('\t\t<table align="center" border cellpadding="4" cellspacing="4" cols="3">\n')
+
+        artifacts_tbl_lines = []
+        artifacts_tbl_lines.append('\t\t<!-- Beginning of Content -->\n')
+        artifacts_tbl_lines.append('\t\t<!-- artifacts -->\n')
+
+        index_tbl_col = 1
         for artifact in artifact_ids:
-            #print(artifact,person_dict[artifact])
+            # Generate index table
+            if index_tbl_col == 1:
+                index_tbl_lines.append('\t\t\t<tr>\n')
+
+            index_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+            #print('*************** artifact = ', artifact)
+            #print('person_dict[artifact] = ', person_dict[artifact])
+            index_tbl_lines.append('\t\t\t\t\t<p><a href="#' + person_dict[artifact]['file'] + '">' + person_dict[artifact]['title'] + '</a></p>\n')
+            index_tbl_lines.append('\t\t\t\t</td>\n')
+
+            if index_tbl_col == 3:
+                index_tbl_lines.append('\t\t\t</tr>\n')
+
+            index_tbl_col = index_tbl_col + 1 if index_tbl_col < 3 else 1
+
+
+            # Generate artifacts table
+            if person_dict[artifact]['type'] == 'picture':
+                artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['file'] + '"/>\n')
+                artifacts_tbl_lines.append('\t\t<table WIDTH="600" Align="CENTER" NOBORDER COLS="2">\n')
+                artifacts_tbl_lines.append('\t\t\t<tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                artifacts_tbl_lines.append('\t\t\t\t<table Align=CENTER BORDER CELLPADDING="4" CELLSPACING="4" COLS="1">\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                if os.path.isfile(folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="' + folder_path + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="' + folder_path + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
+                if os.path.isfile(folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                if 'caption' in person_dict[artifact]:
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<p>' + person_dict[artifact]["caption"] + '</p>\n')
+                else:
+                    f = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
+                    f.write('*****build_web_pages caption Not Found in person_dict[artifact] = ' + person_dict[artifact] + '\n')
+                    f.close()
+                    print('*** caption Not Found in person_dict[artifact] = ', person_dict[artifact])
+                artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
+                artifacts_tbl_lines.append('\t\t\t\t</td>\n')
+                artifacts_tbl_lines.append('\t\t\t</tr>\n')
+                artifacts_tbl_lines.append('\t\t</table>\n')
+                artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
+
+
+            if person_dict[artifact]['type'] == 'inline':
+                #print('Now processing ' + artifact + '.src')
+                if os.path.isfile(folder_path + '/' + artifact + '.src'): # if a src exists, insert it - continued
+                    artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['file'] + '"/>\n')
+                    artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+                    artifact_source = open(folder_path + '/' + artifact + '.src', 'r')
+                    for line in artifact_source:
+                        artifacts_tbl_lines.append(line)
+                    artifact_source.close()
+                    artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
+                else:
+                    artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
+                    artifact_issue.write('*****build_web_pages ' + folder_path + '/' + artifact + '.src file Not Found\n')
+                    artifact_issue.close()
+                    print('*****build_web_pages ' + folder_path + '/' + artifact + '.src file Not Found')
+
+
+            if person_dict[artifact] == 'href':
+                print('Now processing href = ', artifact)
+                #artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+
             pass
+
+
+
+        index_tbl_lines.append('\t\t</table>\n')
+        for line in index_tbl_lines:
+            f.write(line)
+
+        artifacts_tbl_lines.append('\t</body>\n')
+        artifacts_tbl_lines.append('</html>\n')
+
+        for line in artifacts_tbl_lines:
+            f.write(line)
+        f.close()
+        pass
+
         return
 
     def _generate_all_hourglass_webs(self, person, folders_path):
@@ -440,7 +570,7 @@ class build_web_pages(object):
                     hourglass_table['c5r4'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c5r4-->\n'
 
                 # c5r5 target person name and link
-                hourglass_table['c5r5'] = '    <td align="center "><a href="index.html"><p>' + person_facts["FullName"] + '</p></a></td><!--c5r5-->\n'
+                hourglass_table['c5r5'] = '    <td align="center "><a href=index.html><p>' + person_facts["FullName"] + '</p></a></td><!--c5r5-->\n'
 
             #add grandparents
                         #Build father - possibilities are that:
@@ -501,7 +631,7 @@ class build_web_pages(object):
                 # c1r3 target person name and link
                 if os.path.isdir(folders_path + "/" + grandparents['Father']["GenWebID"]):
                     hourglass_table['c1r3'] = '    <td align="center "><a href=../' \
-                            + grandparents['Father']["GenWebID"] + '/"index.html"><p>' \
+                            + grandparents['Father']["GenWebID"] + '/index.html><p>' \
                             + grandparents['Father']['FullName'] + '</p></a></td><!--c1r3-->\n'
                 else:
                     hourglass_table['c1r3'] = '    <td align="center "><p>' \
@@ -544,7 +674,7 @@ class build_web_pages(object):
                 # c1r7 target person name and link
                 if os.path.isdir(folders_path + "/" + grandparents['Mother']["GenWebID"]):
                     hourglass_table['c1r7'] = '    <td align="center "><a href=../' \
-                            + grandparents['Mother']["GenWebID"] + '/"index.html"><p>' \
+                            + grandparents['Mother']["GenWebID"] + '/index.html><p>' \
                             + grandparents['Mother']['FullName'] + '</p></a></td><!--c1r7-->\n'
                 else:
                     hourglass_table['c1r7'] = '    <td align="center "><p>' \

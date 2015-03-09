@@ -235,9 +235,9 @@ class build_web_pages(object):
                 #print('person = ', person)
                 #print('----- person_facts = ', person_facts)
                 if len(person_facts) == 0:
-                    f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-                    f.write('*****build_web_pages line 208****** person = ' + person + '\n')
-                    f.close()
+                    not_found_file = open(folders_path + '/zzz_PeopleNotFound.txt','a')
+                    not_found_file.write('*****build_web_pages line 208****** person = ' + person + '\n')
+                    not_found_file.close()
                     continue
 
                 person_facts = person_facts[0]
@@ -350,6 +350,9 @@ class build_web_pages(object):
         index_tbl_lines = []
         index_tbl_lines.append('\t\t<!-- Index table -->\n')
         index_tbl_lines.append('\t\t<table align="center" border cellpadding="4" cellspacing="4" cols="3">\n')
+        index_tbl_lines.append('\t\t\t<col width="33%">\n')
+        index_tbl_lines.append('\t\t\t<col width="33%">\n')
+        index_tbl_lines.append('\t\t\t<col width="33%">\n')
 
         artifacts_tbl_lines = []
         artifacts_tbl_lines.append('\t\t<!-- Beginning of Content -->\n')
@@ -388,8 +391,8 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                 if os.path.isfile(folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="' + folder_path + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="' + folder_path + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
                 if os.path.isfile(folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
@@ -430,9 +433,15 @@ class build_web_pages(object):
                     print('*****build_web_pages ' + folder_path + '/' + artifact + '.src file Not Found')
 
 
-            if person_dict[artifact] == 'href':
-                print('Now processing href = ', artifact)
-                #artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+            if person_dict[artifact]['type'] == 'href':
+                print('Now processing href = ' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'])
+                if os.path.isfile(person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']): # if an html exists, reference it - continued
+                    artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '"/>\n')
+                    artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+                    artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
+
+                    pass
 
             pass
 

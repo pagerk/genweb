@@ -599,7 +599,7 @@ class Editor(object):
                 elif  self._file_gen["Header"].get() == 'External HTML':
                     f.write('<href>\n')
                     f.write('\t<path>' + artifact_label + '</path>\n')
-                    f.write('\t<file>' + self._file_gen["Artifact_Misc"].get() + '.src</file>\n')
+                    f.write('\t<file>' + self._file_gen["Artifact_Misc"].get() + '</file>\n')
                     f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
                     f.write('\t<mod_date>' + date_modified + '</mod_date>\n')

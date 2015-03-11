@@ -33,10 +33,10 @@ class build_web_pages(object):
                 #print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))
                 person_dict = project_dict[person]
                 #print('__init__ **** person_dict = ', person_dict)
-                #_generate_all_hourglass_webs works - uncomment following line when all else is debugged
+
                 self._generate_all_hourglass_webs(person, folders_path)
                 if person_dict:
-                    pass # to generate web pages, uncomment the following line
+                    # generate web pages
                     self._generate_person_web(person, person_dict, folders_path)
         winsound.Beep(500,1000)
         winsound.Beep(500,1000)
@@ -68,7 +68,7 @@ class build_web_pages(object):
                     with open(folder + '/' + file_name, 'r') as f:
                         # create a dictionary of xml file contents
                         file_data = []
-                        tags = ['path','file','title','caption','comment','people','height','mod_date']
+                        tags = ['path','file','folder','title','caption','comment','people','height','mod_date']
                         types = ['inline','picture','href']
                         tags_types = types + tags
                         dictionary = {}
@@ -365,9 +365,11 @@ class build_web_pages(object):
                 index_tbl_lines.append('\t\t\t<tr>\n')
 
             index_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
-            #print('*************** artifact = ', artifact)
-            #print('person_dict[artifact] = ', person_dict[artifact])
-            index_tbl_lines.append('\t\t\t\t\t<p><a href="#' + person_dict[artifact]['file'] + '">' + person_dict[artifact]['title'] + '</a></p>\n')
+            if artifact == '2005082603PageKarenN2005':
+                print('*************** artifact = ', artifact)
+                print('person_dict[artifact] = ', person_dict[artifact])
+                print('genwebid = ', genwebid)
+            index_tbl_lines.append('\t\t\t\t\t<p><a href="#' + os.path.basename(person_dict[artifact]['file']) + '">' + person_dict[artifact]['title'] + '</a></p>\n')
             index_tbl_lines.append('\t\t\t\t</td>\n')
 
             if index_tbl_col == 3:
@@ -378,7 +380,7 @@ class build_web_pages(object):
 
             # Generate artifacts table
             if person_dict[artifact]['type'] == 'picture':
-                artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['file'] + '"/>\n')
+                artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict[artifact]['file']) + '"/>\n')
                 artifacts_tbl_lines.append('\t\t<table WIDTH="600" Align="CENTER" NOBORDER COLS="2">\n')
                 artifacts_tbl_lines.append('\t\t\t<tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
@@ -412,20 +414,25 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\t\t</td>\n')
                 artifacts_tbl_lines.append('\t\t\t</tr>\n')
                 artifacts_tbl_lines.append('\t\t</table>\n')
+                artifacts_tbl_lines.append('\t\t\n')
                 artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
+                artifacts_tbl_lines.append('\t\t\n')
 
 
             if person_dict[artifact]['type'] == 'inline':
                 #print('Now processing ' + artifact + '.src')
                 if os.path.isfile(folder_path + '/' + artifact + '.src'): # if a src exists, insert it - continued
-                    artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['file'] + '"/>\n')
+                    artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict[artifact]['file']) + '"/>\n')
                     artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
                     artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+                    artifacts_tbl_lines.append('\t\t\n')
                     artifact_source = open(folder_path + '/' + artifact + '.src', 'r')
                     for line in artifact_source:
                         artifacts_tbl_lines.append(line)
                     artifact_source.close()
+                    artifacts_tbl_lines.append('\t\t\n')
                     artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
+                    artifacts_tbl_lines.append('\t\t\n')
                 else:
                     artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
                     artifact_issue.write('*****build_web_pages ' + folder_path + '/' + artifact + '.src file Not Found\n')
@@ -434,12 +441,31 @@ class build_web_pages(object):
 
 
             if person_dict[artifact]['type'] == 'href':
-                print('Now processing href = ' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'])
-                if os.path.isfile(person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']): # if an html exists, reference it - continued
-                    artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '"/>\n')
-                    artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
+                print('person_dict[' + artifact + '] = ', person_dict[artifact])
+                html_path = folders_path + '/' + genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']
+                print('Now processing href = ',html_path)
+                if os.path.isfile(folders_path + '/' + genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']): # if an html exists, reference it - continued
+                    artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['file'] + '"/>\n')
+                    artifacts_tbl_lines.append('\t\t<table WIDTH="600" Align="CENTER" NOBORDER COLS="1">\n')
+                    artifacts_tbl_lines.append('\t\t\t<tr>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t<table Align=CENTER BORDER CELLPADDING="4" CELLSPACING="4" COLS="1">\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '><H2>' + person_dict[artifact]['title'] + '</H2></a>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t</H2>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t</td>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t<td>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t</td>\n')
+                    artifacts_tbl_lines.append('\t\t\t</tr>\n')
+                    artifacts_tbl_lines.append('\t\t</table>\n')
+                    artifacts_tbl_lines.append('\t\t\n')
                     artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
+                    artifacts_tbl_lines.append('\t\t\n')
 
                     pass
 

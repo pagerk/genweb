@@ -514,7 +514,7 @@ class Editor(object):
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
         self._file_gen["Artifact_Caption_Label"].set('')
-        self._file_gen["Artifact_Misc_Label"].set('Relative Path/File')
+        self._file_gen["Artifact_Misc_Label"].set('Folder')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
         # Only display the people who have been selected
@@ -613,7 +613,7 @@ class Editor(object):
                     f.write('\t<caption>' + self._file_gen["Artifact_Caption"].get() + '</caption>\n')
                     f.write('\t<comment>' + self._file_gen["Artifact_Misc"].get() + '</comment>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
-                    f.write('\t<height>' + "330" + '</height>\n')
+                    f.write('\t<height>' + "" + '</height>\n')
                     f.write('\t<mod_date>' + date_modified + '</mod_date>\n')
                     f.write('</picture>')
 

@@ -4,6 +4,8 @@ import os
 import datetime
 import string
 import winsound
+import glob
+import re
 
 from . import rmagic
 
@@ -18,80 +20,137 @@ class build_web_pages(object):
 
         self._matched_persons = []
 
+        debug = 'no'
+
         folders_path = \
             'D:/Family History/Family History CD/Research/Individual_Web_Pages'
         project_dict = self._get_proj_dict_from_xml(folders_path)
-        #print('__init__ **** project_dict = ', project_dict)
+        if debug == 'yes':
+            print('__init__ **** project_dict = ', project_dict)
         people_ids = sorted(project_dict.keys())
         #generating toc web pages works - uncomment following line when all else is debugged
-        self._generate_toc_web(people_ids,folders_path)
+        #self._generate_toc_web(people_ids,folders_path)
         winsound.Beep(500,1000)
         person_dict = {}
         for person in people_ids:
-            #print('__init__ **** person = ', person)
+            if 'ConnorJerry0000' in person:
+                debug = 'yes'
+            if debug == 'yes':
+                print('__init__ **** person = ', person)
             if person.lower().lstrip('abcdefghijklmnopqrstuvwxyz').isdigit():
-                #print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))
+                if debug == 'yes':
+                    print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))
                 person_dict = project_dict[person]
-                #print('__init__ **** person_dict = ', person_dict)
+                if debug == 'yes':
+                    print('__init__ **** person_dict = ', person_dict)
 
-                self._generate_all_hourglass_webs(person, folders_path)
-                if person_dict:
-                    # generate web pages
-                    self._generate_person_web(person, person_dict, folders_path)
+                #self._generate_all_hourglass_webs(person, folders_path)
+
+                # generate web pages
+                self._generate_person_web(person, person_dict, folders_path)
         winsound.Beep(500,1000)
         winsound.Beep(500,1000)
 
 
     def _get_proj_dict_from_xml(self,folders_path):
-        args = os.listdir(folders_path)
-        folders = []
-        for a in args:
-            if os.path.isdir(folders_path + "/" + a):
-                folders.append(folders_path + "/" + a)
-            else:
-                pass
+        os.chdir(folders_path)
+        # I only want folders that have at least a first and last name with a four digit number
+        folders = glob.glob("[a-zA-Z']*[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+        #print('folders = ', folders)
         folder_file_contents = []
         overall_dictionary = {}
         for folder in folders:
-            person_id = os.path.basename(folder)
-            folder_files = os.listdir(folder)
-            #print('folder = ', folder)
+            genwebid = folder
+            os.chdir(folders_path + '/' + folder)
+            #print('current working dir = ', os.getcwd(), '    folder = ', folder, '   xml files = ', glob.glob('*.xml'))
+            folder_files = glob.glob('*.xml')
+            if len(folder_files)  == 0:
+                continue
             big_dictionary = {}
             for file_name in folder_files:
                 file_string = ''
-                # Separate the path from the file name
-                base_file_name = os.path.basename(file_name)
-                artifact_id = os.path.splitext(base_file_name)[0]
-                # The only file contents we care about are xml files
-                if (base_file_name.endswith('.xml')):
-                    #print('file_name = ', file_name)
-                    with open(folder + '/' + file_name, 'r') as f:
-                        # create a dictionary of xml file contents
-                        file_data = []
-                        tags = ['path','file','folder','title','caption','comment','people','height','mod_date']
-                        types = ['inline','picture','href']
-                        tags_types = types + tags
-                        dictionary = {}
-                        for line in f:
-                            lc_line_str = str.lower(line)
-                            line_str = line.replace('<![CDATA[','')
-                            line_str = line_str.replace(']]>','')
-                            #print(line_str)
-                            for type in tags_types:
-                                if lc_line_str.find(type) > 0:
-                                    if type in types:
-                                        dictionary['type'] = type
-                                    elif type in tags:
-                                        find_tag = '<'+type+'>'
-                                        start_position = lc_line_str.find(find_tag)+len(find_tag)
-                                        find_tag = '</'+type+'>'
-                                        end_position = lc_line_str.find(find_tag)
-                                        dictionary[type] = line_str[start_position:end_position]
-                                        #print(dictionary)
-                                    #else:
-                                        #break
-                    big_dictionary[artifact_id] = dictionary
-            overall_dictionary[person_id] = big_dictionary
+                with open(file_name, 'r') as current_xml_file:
+                    # create a dictionary of xml file contents
+                    file_data = []
+                    tags = ['path','file','folder','title','caption','comment','people','height','mod_dat']
+                    types = ['inline','picture','href']
+                    tags_types = types + tags
+                    dictionary = {}
+                    for line in current_xml_file:
+                        line = line.lstrip(' ')
+                        line = line.replace('<![CDATA[','')
+                        line = line.replace(']]>','')
+                        lc_line = line.lower()
+                        #print(line_str)
+                        for type in tags_types:
+                            if lc_line.find(type) > 0:
+                                if type in types:
+                                    dictionary['type'] = type
+                                elif type in tags:
+                                    line = line.replace('<'+type+'>','')
+                                    line = line.replace('</'+type+'>','')
+                                    line = line.lstrip('\t')
+                                    line = line.rstrip('\n')
+                                    dictionary[type] = line
+                                    #print(dictionary)
+                                    pass
+                    big_dictionary[file_name.replace('.xml','')] = dictionary
+            overall_dictionary[genwebid] = big_dictionary
+        #print('overall_dictionary a = ', overall_dictionary)
+        #print('overall_dictionary a keys = ', sorted(overall_dictionary.keys()))
+
+        people_re = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+        # people excluded are those with only one name and a date
+        people_excluded_re = re.compile('[A-Z][a-z]+[0-9][0-9][0-9][0-9]')
+        people_excluded = []
+        for genwebid in overall_dictionary: #make sure everybody is in the dictionary
+            if len(overall_dictionary[genwebid]) == 0:
+                continue
+            for artifact in overall_dictionary[genwebid]:
+                people_in_artifact = people_re.findall(overall_dictionary[genwebid][artifact]['people'])
+                people_excluded = people_excluded_re.findall(overall_dictionary[genwebid][artifact]['people'])
+                for person_in_artifact in people_in_artifact:
+                    if not os.path.isdir(folders_path + "/" + person_in_artifact):
+                        os.makedirs(folders_path + "/" + person_in_artifact)
+                    if not os.path.isdir(folders_path + "/" + genwebid):
+                        os.makedirs(folders_path + "/" + genwebid)
+                    pass
+        if len(people_excluded) > 0:
+            people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
+            people_excluded_file.write('People excluded are: ' + '\n')
+            for person_excluded in people_excluded:
+                people_excluded_file.write(person_excluded + '\n')
+            people_excluded_file.close()
+
+        overall_dictionary_genwebid_list = sorted(overall_dictionary.keys())
+        for genwebid in overall_dictionary_genwebid_list: # make sure all artifacts are assigned to all of the appropriate people
+            if len(overall_dictionary[genwebid]) == 0:
+                continue
+
+            for artifact in overall_dictionary[genwebid]:
+                people_in_artifact = people_re.findall(overall_dictionary[genwebid][artifact]['people'])
+                for person_in_artifact in people_in_artifact:
+                    if person_in_artifact == '':
+                        not_found_file = open(folders_path + '/zzz_PeopleNotFound.txt','a')
+                        not_found_file.write('person_in_artifact = ' + person_in_artifact + '  artifact = ' + artifact + '\n')
+                        not_found_file.write('check the people field of ' + artifact + '\n')
+                        not_found_file.write('genwebid = ' + genwebid + '  artifact = ' + artifact + '\n')
+                        not_found_file.close()
+                    else:
+                        #print('genwebid = ', genwebid, '  artifact = ', artifact)
+                        #print('person_in_artifact = ', person_in_artifact, '  artifact = ', artifact)
+                        if person_in_artifact not in overall_dictionary:
+                            #print('overall_dictionary[person_in_artifact] is not found for person_in_artifact = ', person_in_artifact)
+                            #print('overall_dictionary[genwebid]) = ', overall_dictionary[genwebid])
+                            overall_dictionary[person_in_artifact] = {}
+                            overall_dictionary[person_in_artifact][artifact] = overall_dictionary[genwebid][artifact]
+
+                        else:
+                            overall_dictionary[person_in_artifact][artifact] = overall_dictionary[genwebid][artifact]
+                    pass
+        #print('overall_dictionary b = ', overall_dictionary)
+
+        #print('overall_dictionary b keys = ', sorted(overall_dictionary.keys()))
         return overall_dictionary
 
 
@@ -151,7 +210,7 @@ class build_web_pages(object):
                 name.append(item[start])
 
         if debug == 'yes':
-            print('line 138 separate_names------------ name = ', name)
+            print('line 195 separate_names------------ name = ', name)
 
         surname_exceptions = ["O'",'ap','de','De','le','Le','Mc','Mac','Van','of']
         givenname_exceptions = ['De']
@@ -207,7 +266,7 @@ class build_web_pages(object):
                 person['Initial'] = name[2] + name[3] + name[4]
 
         if debug == 'yes':
-            print('line 190 len(name) = ',len(name), '  person = ', person)
+            print('line 251 len(name) = ',len(name), '  person = ', person)
 
 
         return person
@@ -236,7 +295,7 @@ class build_web_pages(object):
                 #print('----- person_facts = ', person_facts)
                 if len(person_facts) == 0:
                     not_found_file = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-                    not_found_file.write('*****build_web_pages line 208****** person = ' + person + '\n')
+                    not_found_file.write('*****build_web_pages line 290****** person = ' + person + '\n')
                     not_found_file.close()
                     continue
 
@@ -317,13 +376,26 @@ class build_web_pages(object):
         artifact_ids = sorted(person_dict.keys())
         #print('artifact_ids = ', artifact_ids)
         person_id_dict = self._separate_names(genwebid)
-        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)[0]
+        if genwebid == 'ConnorJerry0000':
+            print('!!!!!!!!!!! person_facts = ', rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict))
+        person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
+        if person_facts == []:
+            people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
+            people_excluded_file.write('In _generate_person_web, genwebid = ' + genwebid \
+                    + '  was not found in the rootsmagic datbase. It was searched for with the foillowing information person_id_dict[Surname] = ' + person_id_dict['Surname'] \
+                    + '  person_id_dict[Given] = ' + person_id_dict['Given'] + '  person_id_dict[Initial] = ' + person_id_dict['Initial'] \
+                    + '  person_id_dict[BirthYear] = ' + person_id_dict['BirthYear'] + '\n')
+            people_excluded_file.close()
+            return
+        else:
+            person_facts = person_facts[0]
         #print('genwebid = ', genwebid, '----- person_facts = ', person_facts)
         folder_path = folders_path + '/' + genwebid
+        person_folder_path = folders_path + '/' + genwebid
         #print('folder_path = ', folder_path)
 
         if not os.path.isdir(folder_path):
-            print('*****build_web_pages ' + folder_path + '**** does not exist****')
+            print('*****build_web_pages ' + folder_path + '**** created ****')
             os.makedirs(folder_path)
 
 
@@ -346,6 +418,11 @@ class build_web_pages(object):
         death_year = person_facts['DeathYear'] if len(person_facts['DeathYear']) > 2 else '?'
         f.write('\t\t<h1><a name="Top"></a>' + person_facts["FullName"] + ' - ' + birth_year + ' - ' + death_year + '</h1>\n')
         f.write('\t\t<a href= "HourGlass.html"><img src="../images/family.bmp"></a>\n')
+        if person_dict == {}:
+            f.write('\t</body>\n')
+            f.write('</html>\n')
+            f.close()
+            return
 
         index_tbl_lines = []
         index_tbl_lines.append('\t\t<!-- Index table -->\n')
@@ -360,15 +437,18 @@ class build_web_pages(object):
 
         index_tbl_col = 1
         for artifact in artifact_ids:
+            artifact_genwebid = artifact.lstrip('+0123456789')
+            artifact_folder_path = folders_path + '/' + artifact_genwebid
             # Generate index table
             if index_tbl_col == 1:
                 index_tbl_lines.append('\t\t\t<tr>\n')
 
             index_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
-            if artifact == '2005082603PageKarenN2005':
+            """
+            if artifact == '2013042100ClarkPaula':
                 print('*************** artifact = ', artifact)
                 print('person_dict[artifact] = ', person_dict[artifact])
-                print('genwebid = ', genwebid)
+                print('genwebid = ', genwebid)"""
             index_tbl_lines.append('\t\t\t\t\t<p><a href="#' + os.path.basename(person_dict[artifact]['file']) + '">' + person_dict[artifact]['title'] + '</a></p>\n')
             index_tbl_lines.append('\t\t\t\t</td>\n')
 
@@ -392,10 +472,10 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                if os.path.isfile(folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
-                if os.path.isfile(folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
+                if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
+                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
+                if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
@@ -421,12 +501,12 @@ class build_web_pages(object):
 
             if person_dict[artifact]['type'] == 'inline':
                 #print('Now processing ' + artifact + '.src')
-                if os.path.isfile(folder_path + '/' + artifact + '.src'): # if a src exists, insert it - continued
+                if os.path.isfile(artifact_folder_path + '/' + artifact + '.src'): # if a src exists, insert it - continued
                     artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict[artifact]['file']) + '"/>\n')
                     artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
                     artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
                     artifacts_tbl_lines.append('\t\t\n')
-                    artifact_source = open(folder_path + '/' + artifact + '.src', 'r')
+                    artifact_source = open(artifact_folder_path + '/' + artifact + '.src', 'r')
                     for line in artifact_source:
                         artifacts_tbl_lines.append(line)
                     artifact_source.close()
@@ -435,16 +515,18 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\n')
                 else:
                     artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
-                    artifact_issue.write('*****build_web_pages ' + folder_path + '/' + artifact + '.src file Not Found\n')
+                    artifact_issue.write('*****build_web_pages line 508: ' + artifact_folder_path + '/' + artifact + '.src file Not Found\n')
+                    artifact_issue.write('*****build_web_pages line 509: person_dict[artifact] = ', person_dict[artifact])
+                    artifact_issue.write('*****build_web_pages line 510: person_dict = ', person_dict)
                     artifact_issue.close()
-                    print('*****build_web_pages ' + folder_path + '/' + artifact + '.src file Not Found')
+                    #print('*****build_web_pages ' + artifact_folder_path + '/' + artifact + '.src file Not Found')
 
 
             if person_dict[artifact]['type'] == 'href':
                 print('person_dict[' + artifact + '] = ', person_dict[artifact])
-                html_path = folders_path + '/' + genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']
-                print('Now processing href = ',html_path)
-                if os.path.isfile(folders_path + '/' + genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']): # if an html exists, reference it - continued
+                html_path = artifact_folder_path + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']
+                #print('Now processing href = ',html_path)
+                if os.path.isfile(artifact_folder_path + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']): # if an html exists, reference it - continued
                     artifacts_tbl_lines.append('\t\t<a name="' + person_dict[artifact]['file'] + '"/>\n')
                     artifacts_tbl_lines.append('\t\t<table WIDTH="600" Align="CENTER" NOBORDER COLS="1">\n')
                     artifacts_tbl_lines.append('\t\t\t<tr>\n')
@@ -453,7 +535,7 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '><H2>' + person_dict[artifact]['title'] + '</H2></a>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '><H2>' + person_dict[artifact]['title'] + '</H2></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t</H2>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
@@ -495,7 +577,7 @@ class build_web_pages(object):
         information is my rootsmagic database. Note that "person" is the same
         as person_facts['GenWebID']
         """
-        if person == 'BrentMabel1896':
+        if 'ConnorJerry0000' in person:
             print('_generate_all_hourglass_webs ***** person = ', person)
 
         # self._separate_names(person) is of the form:
@@ -512,7 +594,7 @@ class build_web_pages(object):
     	# where these rootsmagic tags are equivalent ; OwnerID = person_ID
 
         if len(person_facts) == 0:
-            print('person = ', person)
+            #print('person = ', person)
             f = open(folders_path + '/zzz_PeopleNotFound.txt','a')
             f.write('*****build_web_pages target person section ****** person = ' + person + '\n')
             possible_matches = rmagic.fetch_person_from_fuzzy_name(self._tables['NameTable'], self._separate_names(person), year_error=2)
@@ -875,9 +957,18 @@ class build_web_pages(object):
                 hourglassFile.close()
             else:
 
-                f = open(folders_path + '/zzz_FolderNotFound.txt','a')
-                f.write('*********** folder = ' + person_facts['GenWebID'] + '\n')
-                f.close()
+                folder_not_found = open(folders_path + '/zzz_FolderNotFound.txt','a')
+                folder_not_found.write('***** _generate_all_hourglass_webs ****** folder = ' + person_facts['GenWebID'] + '\n')
+                folder_not_found.write('person_facts[FullName] = ' + person_facts['FullName'] \
+                                  + '\n person_facts[BirthYear] = ' + person_facts['BirthYear'] \
+                                  + '\n person_facts[DeathYear] = ' + person_facts['DeathYear'] + '\n')
+                folder_not_found.close()
+                #[{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+                #  'Suffix': '', 'BirthYear': '1949','Prefix': '',
+                #  'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+                #  'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+                #  'FullName': 'Page, Robert Kenneth'}]
+            	# where these rootsmagic tags are equivalent ; OwnerID = person_ID)
 
         return
 

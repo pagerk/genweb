@@ -140,8 +140,12 @@ def fetch_person_from_name(name_table, person_table, name_dict):
     """
 
     debug = 'no'
+    if name_dict['Surname'] == 'Mawr':
+        debug = 'yes'
+
+        print('entering fetch_person_from_name (line 145): name_dict = ', name_dict)
     if name_dict['Given'] == '' and name_dict['BirthYear'] == '':
-        print('---fetch_person_from_name--- name_dict = ', name_dict)
+        print('0---fetch_person_from_name--- name_dict = ', name_dict)
         debug = 'yes'
     person_matches = []
     for person in name_table:
@@ -153,7 +157,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
         )):
             person['Surname'] = person['Surname'].replace(' ', '')
             if debug == 'yes':
-                print('---fetch_person_from_name--- match person = ', person)
+                print('1---fetch_person_from_name--- match person = ', person)
 
             for target in person_table:
                 if target['PersonID'] == person['OwnerID']:
@@ -175,8 +179,14 @@ def fetch_person_from_name(name_table, person_table, name_dict):
                 else:
                     genweb_id = genweb_id + person['Given'][given_num][0]
 
+            if debug == 'yes':
+                print('fetch_person_from_name--- person[BirthYear] = ', person['BirthYear'])
             if person['BirthYear'] == '0':
                 person['BirthYear'] = '0000'
+            if len(person['BirthYear']) == 3:
+                person['BirthYear'] = '0' + person['BirthYear']
+                if debug == 'yes':
+                    print('fetch_person_from_name--- 3 digit corrected person[BirthYear] = ', person['BirthYear'])
 
             genweb_id = genweb_id + person['BirthYear']
             person['GenWebID'] = genweb_id
@@ -184,7 +194,10 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             person_matches.append(person)
 
             if debug == 'yes':
-                print('---fetch_person_from_name--- person_matches = ', person_matches)
+                print('2---exiting fetch_person_from_name:--- person_matches = ', person_matches)
+    if not person_matches:
+        print('3---exiting fetch_person_from_name---no match found')
+    print()
 
     if not person_matches:
         _moduleLogger.debug("No person found: %r", name_dict)

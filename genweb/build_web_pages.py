@@ -27,14 +27,16 @@ class build_web_pages(object):
         project_dict = self._get_proj_dict_from_xml(folders_path)
         if debug == 'yes':
             print('__init__ **** project_dict = ', project_dict)
-        people_ids = sorted(project_dict.keys())
-        #generating toc web pages works - uncomment following line when all else is debugged
-        #self._generate_toc_web(people_ids,folders_path)
+
+        people_ids = sorted(project_dict.keys()) # a list of genwebid
+        #generating toc web pages
+        self._generate_toc_web(people_ids,folders_path)
+
         winsound.Beep(500,1000)
         person_dict = {}
         for person in people_ids:
-            if 'ConnorJerry0000' in person:
-                debug = 'yes'
+            if '' in person:
+                debug = 'no'
             if debug == 'yes':
                 print('__init__ **** person = ', person)
             if person.lower().lstrip('abcdefghijklmnopqrstuvwxyz').isdigit():
@@ -44,7 +46,7 @@ class build_web_pages(object):
                 if debug == 'yes':
                     print('__init__ **** person_dict = ', person_dict)
 
-                #self._generate_all_hourglass_webs(person, folders_path)
+                self._generate_all_hourglass_webs(person, folders_path)
 
                 # generate web pages
                 self._generate_person_web(person, person_dict, folders_path)
@@ -53,6 +55,19 @@ class build_web_pages(object):
 
 
     def _get_proj_dict_from_xml(self,folders_path):
+        """
+        Build a dictionary with each person's genwebid as a key. Each person's
+        key will be attached to a dictionary containing zero or more artifacts.
+        Each artifact will consist of a key (the artifact_id) of the
+        form: YYYYMMDD##Last_nameFirst_nameMiddle_initialYYYY where the
+        first date in the id is the date of the artifact (birth, death,
+        marriage, etc.) and the last date is the birth year of the person whose
+        folder has "custody" of the artifact. Associated with that artifact key
+        is a dictionary of the artifact description. The artifact description
+        has a key indicating the type of artifact ('inline','picture','href')
+        and the data elements describing the artifact and it's location: 'path',
+        'file','folder','title','caption','comment','people','height','mod_dat'
+        """
         os.chdir(folders_path)
         # I only want folders that have at least a first and last name with a four digit number
         folders = glob.glob("[a-zA-Z']*[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
@@ -63,19 +78,24 @@ class build_web_pages(object):
             genwebid = folder
             os.chdir(folders_path + '/' + folder)
             #print('current working dir = ', os.getcwd(), '    folder = ', folder, '   xml files = ', glob.glob('*.xml'))
-            folder_files = glob.glob('*.xml')
-            if len(folder_files)  == 0:
-                continue
+            folder_files = glob.glob('*.xml') #xml files are artifact description files
+
+            if len(folder_files)  == 0:  # if there are no xml files in this person's folder
+                continue                 # move on to the next folder
+
             big_dictionary = {}
             for file_name in folder_files:
                 file_string = ''
+
+                # create a dictionary of xml file contents
                 with open(file_name, 'r') as current_xml_file:
-                    # create a dictionary of xml file contents
                     file_data = []
                     tags = ['path','file','folder','title','caption','comment','people','height','mod_dat']
                     types = ['inline','picture','href']
                     tags_types = types + tags
                     dictionary = {}
+
+                    #extract all data from the current xml file
                     for line in current_xml_file:
                         line = line.lstrip(' ')
                         line = line.replace('<![CDATA[','')
@@ -104,32 +124,39 @@ class build_web_pages(object):
         people_excluded_re = re.compile('[A-Z][a-z]+[0-9][0-9][0-9][0-9]')
         people_excluded = []
         for genwebid in overall_dictionary: #make sure everybody is in the dictionary
-            if len(overall_dictionary[genwebid]) == 0:
+            if len(overall_dictionary[genwebid]) == 0: # if there are no xml files skip this person
                 continue
+            #for each xml file, ensure that the people references in <people>
+            #   - have legitimate names
+            #   - have their own folder
             for artifact in overall_dictionary[genwebid]:
                 people_in_artifact = people_re.findall(overall_dictionary[genwebid][artifact]['people'])
-                people_excluded = people_excluded_re.findall(overall_dictionary[genwebid][artifact]['people'])
+                people_excluded = list(set(people_excluded + people_excluded_re.findall(overall_dictionary[genwebid][artifact]['people'])))
                 for person_in_artifact in people_in_artifact:
                     if not os.path.isdir(folders_path + "/" + person_in_artifact):
                         os.makedirs(folders_path + "/" + person_in_artifact)
-                    if not os.path.isdir(folders_path + "/" + genwebid):
-                        os.makedirs(folders_path + "/" + genwebid)
-                    pass
+                    #if not os.path.isdir(folders_path + "/" + genwebid):
+                    #    os.makedirs(folders_path + "/" + genwebid)
+
+        # if there are any names excluded, save those for manual cleanup
         if len(people_excluded) > 0:
+            people_excluded.sort()
             people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
-            people_excluded_file.write('People excluded are: ' + '\n')
+            people_excluded_file.write('People excluded are (from _get_proj_dict_from_xml): ' + '\n')
             for person_excluded in people_excluded:
                 people_excluded_file.write(person_excluded + '\n')
             people_excluded_file.close()
 
+        # assign all artifacts to all of the appropriate people
         overall_dictionary_genwebid_list = sorted(overall_dictionary.keys())
-        for genwebid in overall_dictionary_genwebid_list: # make sure all artifacts are assigned to all of the appropriate people
+        for genwebid in overall_dictionary_genwebid_list:
             if len(overall_dictionary[genwebid]) == 0:
                 continue
 
             for artifact in overall_dictionary[genwebid]:
                 people_in_artifact = people_re.findall(overall_dictionary[genwebid][artifact]['people'])
                 for person_in_artifact in people_in_artifact:
+                    # if the person has no artifacts assigned
                     if person_in_artifact == '':
                         not_found_file = open(folders_path + '/zzz_PeopleNotFound.txt','a')
                         not_found_file.write('person_in_artifact = ' + person_in_artifact + '  artifact = ' + artifact + '\n')
@@ -166,107 +193,49 @@ class build_web_pages(object):
             'Given'
             'Initial'"""
 
-        import string
-
         # extract the date
         debug = 'no'
-        if item == '':
+        if item == "":
             debug = 'yes'
         person = {}
-        person['BirthYear'] = item.strip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        person['BirthYear'] = item.strip("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'")
         item = item.strip('0123456789')
-        if debug == 'yes':
-            print('date = ',person['BirthYear'], '  name string = ',item)
 
-        # Separate the text portion of the file name into a list of names that start
-        # with capital letters
-        item_length = len(item)
-        last_char = item_length - 1
-        letter_num = 0
-        cap = []
-        name = []
-        for letter_num in range(item_length):
-            if item[letter_num].isupper():
-                cap.append(letter_num)
 
-        if 0 not in cap:
-            cap.insert(0,0)
+        people_re = re.compile(r"([A-Z][a-z]+)")
 
-        if debug == 'yes':
-            print('_separate_names line 121 item = ', item)
-            print('_separate_names line 121 cap = ', cap)
-
-        cap_length = len(cap)
-        for cap_num in range(cap_length):
-            start = cap[cap_num]
-            end_index = cap_num + 1
-            if end_index <= (cap_length - 1):
-                end = cap[cap_num+1]
-                name.append(item[start:end])
-            elif cap[cap_length-1] < item_length - 1:
-                end = item_length
-                name.append(item[start:end])
-            else:
-                name.append(item[start])
-
-        if debug == 'yes':
-            print('line 195 separate_names------------ name = ', name)
+        names = people_re.split(item)
+        names = [x for x in names if x != '']
 
         surname_exceptions = ["O'",'ap','de','De','le','Le','Mc','Mac','Van','of']
         givenname_exceptions = ['De']
-        if len(name) == 1:
-            person['Surname'] = name[0]
-            person['Given'] = ''
-            person['Initial'] = ''
 
-        if len(name) == 2 and (name[0] in surname_exceptions):
-            person['Surname'] = name[0] + name[1]
-            person['Given'] = ''
-            person['Initial'] = ''
-        elif len(name) == 2:
-            person['Surname'] = name[0]
-            person['Given'] = name[1]
-            person['Initial'] = ''
+        person['Surname'] = ''
+        person['Given'] = ''
+        person['Initial'] = ''
 
-        if len(name) == 3:
-                if (name[0] in surname_exceptions):
-                    person['Given'] = name[2]
-                    person['Surname'] = name[0] + name[1]
-                elif (name[1] in givenname_exceptions):
-                    person['Surname'] = name[0]
-                    person['Given'] =  name[1] + name[2]
-                else:
-                    person['Surname'] = name[0]
-                    person['Given'] = name[1]
-                    person['Initial'] = name[2]
-
-
-        if len(name) == 4:
-            if (name[0] in surname_exceptions):
-                person['Surname'] = name[0] + name[1]
-                person['Given'] =  name[2]
-                person['Initial'] = name[3]
-            elif (name[1] in surname_exceptions):
-                person['Surname'] = name[0]
-                person['Given'] = name[1] + name[2]
-                person['Initial'] = name[3]
+        if names[0] in surname_exceptions:
+            person['Surname'] = names[0] + names[1]
+            if names[2] in givenname_exceptions:
+                person['Given'] = names[2] + names[3]
+                if len(names) == 5: person['Initial'] = names[4]
             else:
-                person['Surname'] = name[0]
-                person['Given'] = name[1]
-                person['Initial'] =  name[2] + name[3]
+                person['Given'] = names[2]
+                if len(names) == 4: person['Initial'] = names[3]
 
-        if len(name) == 5:
-            if (name[0] in surname_exceptions):
-                person['Surname'] = name[0] + name[1]
-                person['Given'] = name[2]
-                person['Initial'] =  name[3] + name[4]
+        else:
+            person['Surname'] = names[0]
+            if names[1] in givenname_exceptions:
+                person['Given'] = names[1] + names[2]
+                if len(names) == 4: person['Initial'] = names[3]
             else:
-                person['Surname'] = name[0]
-                person['Given'] = name[1]
-                person['Initial'] = name[2] + name[3] + name[4]
+                person['Given'] = names[1]
+                if len(names) == 3: person['Initial'] = names[2]
 
-        if debug == 'yes':
-            print('line 251 len(name) = ',len(name), '  person = ', person)
+        person['FullName'] = person['Given'] + person['Initial'] + person['Surname']
+
+        if item != person['Surname'] + person['Given'] + person['Initial'] :
+            print('item = ', item, ' person full name = ', person['Given'], ' ', person['Initial'], ' ', person['Surname'])
 
 
         return person
@@ -282,20 +251,30 @@ class build_web_pages(object):
         previous_letter = ''
         table_cell_ct = 0
         table_col = 0
+        debug = 'no'
         for person in people_ids:
-            if person.lower().lstrip('abcdefghijklmnopqrstuvwxyz').isdigit():
+            if person == "":
+                debug = 'yes'
+                print('person = ', person)
+            if person.lower().lstrip("abcdefghijklmnopqrstuvwxyz'").isdigit():
                 person_id_dict = self._separate_names(person)
+                if debug == 'yes':
+                    person_dict_keys = sorted(person_dict.keys())
+                    for key in person_dict_keys:
+                        print(key, ' = ', person_id_dict[key])
+
                 if person[0:2] == 'de':
                     current_letter = person[0:2]
                 else:
                     current_letter = person[0]
                 file_name = folders_path + '/' + current_letter + '.html'
                 person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
-                #print('person = ', person)
-                #print('----- person_facts = ', person_facts)
+                if debug == 'yes':
+                    print('person = ', person)
+                    print('----- person_facts = ', person_facts)
                 if len(person_facts) == 0:
                     not_found_file = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-                    not_found_file.write('*****build_web_pages line 290****** person = ' + person + '\n')
+                    not_found_file.write('*****build_web_pages line 276 ****** person = ' + person + '\n')
                     not_found_file.close()
                     continue
 
@@ -370,7 +349,7 @@ class build_web_pages(object):
                 previous_letter = current_letter
 
         f.close()
-        return
+        return              # return from _generate_toc_web
 
     def _generate_person_web(self, genwebid, person_dict, folders_path):
         artifact_ids = sorted(person_dict.keys())
@@ -382,7 +361,7 @@ class build_web_pages(object):
         if person_facts == []:
             people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
             people_excluded_file.write('In _generate_person_web, genwebid = ' + genwebid \
-                    + '  was not found in the rootsmagic datbase. It was searched for with the foillowing information person_id_dict[Surname] = ' + person_id_dict['Surname'] \
+                    + '  was not found in the rootsmagic datbase. It was searched for with the following information person_id_dict[Surname] = ' + person_id_dict['Surname'] \
                     + '  person_id_dict[Given] = ' + person_id_dict['Given'] + '  person_id_dict[Initial] = ' + person_id_dict['Initial'] \
                     + '  person_id_dict[BirthYear] = ' + person_id_dict['BirthYear'] + '\n')
             people_excluded_file.close()

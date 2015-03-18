@@ -140,10 +140,15 @@ def fetch_person_from_name(name_table, person_table, name_dict):
     """
 
     debug = 'no'
-    if name_dict['Surname'] == 'Mawr':
+    if name_dict['Surname'] == "":
         debug = 'yes'
+    if debug == 'yes':
+        fetch_person_from_name_file = open('D:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
+        fetch_person_from_name_file.write('entering fetch_person_from_name:\n')
+        fetch_person_from_name_file.write('name_dict[Surname] = ' + name_dict['Surname'] + '\n')
+        fetch_person_from_name_file.write('name_dict[Given] = ' + name_dict['Given'] + '\n')
+        fetch_person_from_name_file.write('name_dict[BirthYear] = ' + name_dict['BirthYear'] + '\n')
 
-        print('entering fetch_person_from_name (line 145): name_dict = ', name_dict)
     if name_dict['Given'] == '' and name_dict['BirthYear'] == '':
         print('0---fetch_person_from_name--- name_dict = ', name_dict)
         debug = 'yes'
@@ -157,12 +162,18 @@ def fetch_person_from_name(name_table, person_table, name_dict):
         )):
             person['Surname'] = person['Surname'].replace(' ', '')
             if debug == 'yes':
-                print('1---fetch_person_from_name--- match person = ', person)
+                fetch_person_from_name_file.write('1---fetch_person_from_name--- match person = \n')
+                fetch_person_from_name_file.write('person[Surname] = ' + person['Surname'] + '\n')
+                fetch_person_from_name_file.write('person[Given] = ' + person['Given'][0] + '\n')
+                fetch_person_from_name_file.write('person[BirthYear] = ' + person['BirthYear'] + '\n')
 
             for target in person_table:
                 if target['PersonID'] == person['OwnerID']:
                     if debug == 'yes':
-                        print('---fetch_person_from_name--- target = ', target)
+                        fetch_person_from_name_file.write('---fetch_person_from_name--- target =\n')
+                        fetch_person_from_name_file.write('target[PersonID] = ' + target['PersonID'] + '\n')
+                        fetch_person_from_name_file.write('target[ParentID] = ' + str(target['ParentID']) + '\n')
+                        fetch_person_from_name_file.write('target[SpouseID] = ' + target['SpouseID'] + '\n')
                     person['Sex'] = 'male' if target['Sex'] == '0' else 'female'
                     break
 
@@ -180,13 +191,13 @@ def fetch_person_from_name(name_table, person_table, name_dict):
                     genweb_id = genweb_id + person['Given'][given_num][0]
 
             if debug == 'yes':
-                print('fetch_person_from_name--- person[BirthYear] = ', person['BirthYear'])
+                fetch_person_from_name_file.write('fetch_person_from_name--- person[BirthYear] = ' + person['BirthYear'] + '\n')
             if person['BirthYear'] == '0':
                 person['BirthYear'] = '0000'
             if len(person['BirthYear']) == 3:
                 person['BirthYear'] = '0' + person['BirthYear']
                 if debug == 'yes':
-                    print('fetch_person_from_name--- 3 digit corrected person[BirthYear] = ', person['BirthYear'])
+                    fetch_person_from_name_file.write('fetch_person_from_name--- 3 digit corrected person[BirthYear] = ' + person['BirthYear'] + '\n')
 
             genweb_id = genweb_id + person['BirthYear']
             person['GenWebID'] = genweb_id
@@ -194,10 +205,16 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             person_matches.append(person)
 
             if debug == 'yes':
-                print('2---exiting fetch_person_from_name:--- person_matches = ', person_matches)
+                for person in person_matches:
+                    fetch_person_from_name_file.write('2---exiting fetch_person_from_name:--- person_matches = \n')
+                    fetch_person_from_name_file.write('person[Surname] = ' + person['Surname'] + '\n')
+                    fetch_person_from_name_file.write('person[Given] = ' + person['Given'][0] + '\n')
+                    fetch_person_from_name_file.write('person[BirthYear] = ' + person['BirthYear'] + '\n')
     if not person_matches:
         print('3---exiting fetch_person_from_name---no match found')
-    print()
+
+    if debug == 'yes':
+        fetch_person_from_name_file.close()
 
     if not person_matches:
         _moduleLogger.debug("No person found: %r", name_dict)

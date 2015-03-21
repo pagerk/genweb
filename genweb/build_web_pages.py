@@ -2,6 +2,7 @@
 
 import os
 import datetime
+import time
 import string
 import winsound
 import glob
@@ -15,6 +16,13 @@ import sys
 class build_web_pages(object):
 
     def __init__(self, rmagicPath):
+
+        if sys.platform == "win32":
+            timer = time.clock
+        else:
+            timer = time.time
+        t0 = t1 = 0
+        t0 = timer()
         self._rmagicPath = rmagicPath
         self._tables = rmagic.fetch_rm_tables(self._rmagicPath)
 
@@ -32,7 +40,6 @@ class build_web_pages(object):
         #generating toc web pages
         self._generate_toc_web(people_ids,folders_path)
 
-        winsound.Beep(500,1000)
         person_dict = {}
         for person in people_ids:
             if '' in person:
@@ -50,6 +57,8 @@ class build_web_pages(object):
 
                 # generate web pages
                 self._generate_person_web(person, person_dict, folders_path)
+        t1 = timer()
+        print('execution time =' , int((t1 - t0)//60), ' minutes, ',  int((t1 - t0)%60), ' seconds or ', (t1 - t0), ' seconds total')
         winsound.Beep(500,1000)
         winsound.Beep(500,1000)
 
@@ -451,6 +460,10 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
+                if not os.path.isfile(artifact_folder_path + '/' + artifact + '.jpg'): # if  image doesn't exist, note it to be fixed
+                    pic_issue_file = open(folders_path + '/zzz_Artifact_picture_issue.txt','a')
+                    pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + '\n')
+                    pic_issue_file.close()
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
@@ -466,7 +479,6 @@ class build_web_pages(object):
                     f = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
                     f.write('*****build_web_pages caption Not Found in person_dict[artifact] = ' + person_dict[artifact] + '\n')
                     f.close()
-                    print('*** caption Not Found in person_dict[artifact] = ', person_dict[artifact])
                 artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
@@ -494,15 +506,15 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\n')
                 else:
                     artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
-                    artifact_issue.write('*****build_web_pages line 508: ' + artifact_folder_path + '/' + artifact + '.src file Not Found\n')
-                    artifact_issue.write('*****build_web_pages line 509: person_dict[artifact] = ', person_dict[artifact])
-                    artifact_issue.write('*****build_web_pages line 510: person_dict = ', person_dict)
+                    artifact_issue.write('*****build_web_pages line 509: ' + artifact_folder_path + '/' + artifact + '.src file Not Found\n')
+                    artifact_issue.write('*****build_web_pages line 510: person_dict[artifact] = ', person_dict[artifact])
+                    artifact_issue.write('*****build_web_pages line 511: person_dict = ', person_dict)
                     artifact_issue.close()
                     #print('*****build_web_pages ' + artifact_folder_path + '/' + artifact + '.src file Not Found')
 
 
             if person_dict[artifact]['type'] == 'href':
-                print('person_dict[' + artifact + '] = ', person_dict[artifact])
+                #print('person_dict[' + artifact + '] = ', person_dict[artifact])
                 html_path = artifact_folder_path + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']
                 #print('Now processing href = ',html_path)
                 if os.path.isfile(artifact_folder_path + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file']): # if an html exists, reference it - continued
@@ -514,13 +526,10 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '><H2>' + person_dict[artifact]['title'] + '</H2></a>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t</H2>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '"><H2>' + person_dict[artifact]['title'] + '</H2></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t</td>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t<td>\n')
                     artifacts_tbl_lines.append('\t\t\t\t</td>\n')
                     artifacts_tbl_lines.append('\t\t\t</tr>\n')
                     artifacts_tbl_lines.append('\t\t</table>\n')

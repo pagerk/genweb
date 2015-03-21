@@ -513,7 +513,7 @@ class Editor(object):
         self._file_gen["Header"].set('External HTML')
         self._file_gen["Artifact_ID_Label"].set('ID	YYYYMMDD##')
         self._file_gen["Artifact_Title_Label"].set('Title')
-        self._file_gen["Artifact_Caption_Label"].set('')
+        self._file_gen["Artifact_Caption_Label"].set('File')
         self._file_gen["Artifact_Misc_Label"].set('Folder')
         self._file_gen["Artifact_Path_Label"].set('Path')
 
@@ -599,7 +599,8 @@ class Editor(object):
                 elif  self._file_gen["Header"].get() == 'External HTML':
                     f.write('<href>\n')
                     f.write('\t<path>' + artifact_label + '</path>\n')
-                    f.write('\t<file>' + self._file_gen["Artifact_Misc"].get() + '</file>\n')
+                    f.write('\t<file>' + self._file_gen["Artifact_Caption"].get() + '</file>\n')
+                    f.write('\t<folder>' + self._file_gen["Artifact_Misc"].get() + '</folder>\n')
                     f.write('\t<title>' + self._file_gen["Artifact_Title"].get() + '</title>\n')
                     f.write('\t<people>' + referenced_people + '</people>\n')
                     f.write('\t<mod_date>' + date_modified + '</mod_date>\n')

@@ -94,6 +94,19 @@ class build_web_pages(object):
 
             big_dictionary = {}
             for file_name in folder_files:
+
+                if not (folder in file_name): # if  xml file name doesn't match folder
+                    xml_file_name_issue_file = open(folders_path + '/zzz_xml_file_name_issue.txt','a')
+                    xml_file_name_issue_file.write('*****_get_proj_dict_from_xml file name ' + file_name + ' should Not be in ' + folder + '\n')
+                    xml_file_name_issue_file.close()
+                    continue
+                proper_format = re.compile("[+]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+                if not proper_format.match(file_name.rstrip('.xml')):
+                    xml_file_name_issue_file = open(folders_path + '/zzz_xml_file_name_issue.txt','a')
+                    xml_file_name_issue_file.write('*****_get_proj_dict_from_xml file name ' + folder + '/' + file_name + ' does not have the proper data format\n')
+                    xml_file_name_issue_file.close()
+                    continue
+
                 file_string = ''
 
                 # create a dictionary of xml file contents
@@ -432,11 +445,11 @@ class build_web_pages(object):
                 index_tbl_lines.append('\t\t\t<tr>\n')
 
             index_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
-            """
-            if artifact == '2013042100ClarkPaula':
+
+            if artifact == '':
                 print('*************** artifact = ', artifact)
                 print('person_dict[artifact] = ', person_dict[artifact])
-                print('genwebid = ', genwebid)"""
+                print('genwebid = ', genwebid, '   person_dict = ', person_dict)
             index_tbl_lines.append('\t\t\t\t\t<p><a href="#' + os.path.basename(person_dict[artifact]['file']) + '">' + person_dict[artifact]['title'] + '</a></p>\n')
             index_tbl_lines.append('\t\t\t\t</td>\n')
 
@@ -460,9 +473,9 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                if not os.path.isfile(artifact_folder_path + '/' + artifact + '.jpg'): # if  image doesn't exist, note it to be fixed
+                if not os.path.isfile(artifact_folder_path + '/' + artifact + '.jpg') and genwebid in artifact: # if  image doesn't exist, note it to be fixed
                     pic_issue_file = open(folders_path + '/zzz_Artifact_picture_issue.txt','a')
-                    pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + '\n')
+                    pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + ' for ' + genwebid + '\n')
                     pic_issue_file.close()
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
@@ -477,7 +490,7 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<p>' + person_dict[artifact]["caption"] + '</p>\n')
                 else:
                     f = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
-                    f.write('*****build_web_pages caption Not Found in person_dict[artifact] = ' + person_dict[artifact] + '\n')
+                    f.write('*****_generate_person_web caption Not Found in person_dict[artifact] = ' + person_dict[artifact] + '\n')
                     f.close()
                 artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
@@ -490,9 +503,13 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\n')
 
 
+
+
+
+            proper_format = re.compile("[+]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
             if person_dict[artifact]['type'] == 'inline':
                 #print('Now processing ' + artifact + '.src')
-                if os.path.isfile(artifact_folder_path + '/' + artifact + '.src'): # if a src exists, insert it - continued
+                if os.path.isfile(artifact_folder_path + '/' + artifact + '.src') and proper_format.match(artifact): # if a src exists, insert it - continued
                     artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict[artifact]['file']) + '"/>\n')
                     artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
                     artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
@@ -506,10 +523,15 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\n')
                 else:
                     artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
-                    artifact_issue.write('*****build_web_pages line 509: ' + artifact_folder_path + '/' + artifact + '.src file Not Found\n')
-                    artifact_issue.write('*****build_web_pages line 510: person_dict[artifact] = ', person_dict[artifact])
-                    artifact_issue.write('*****build_web_pages line 511: person_dict = ', person_dict)
+                    artifact_issue.write('*****build_web_pages line 526: ' + artifact_folder_path + '/' + artifact + '.src file Not Found\n')
+                    artifact_issue.write('*****build_web_pages line 527: person_dict[artifact][file] = ' + person_dict[artifact]['file'] +'\n')
+                    artifact_issue.write('*****build_web_pages line 528: person_dict[artifact][title] = ' + artifact +'\n')
                     artifact_issue.close()
+                    if not proper_format.match(artifact):
+                        src_file_name_issue_file = open(folders_path + '/zzz_src_file_name_issue.txt','a')
+                        src_file_name_issue_file.write('*****_generate_person_web - inline: file name ' + artifact + '.src' + file_name + ' does not have the proper data format\n')
+                        src_file_name_issue_file.close()
+                    continue
                     #print('*****build_web_pages ' + artifact_folder_path + '/' + artifact + '.src file Not Found')
 
 
@@ -536,7 +558,11 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\n')
                     artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
                     artifacts_tbl_lines.append('\t\t\n')
-
+                else:
+                    artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
+                    artifact_issue.write('*****build_web_pages line 563: href file Not Found\n')
+                    artifact_issue.write('*****build_web_pages line 564:' + artifact_folder_path + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] +'\n')
+                    artifact_issue.close()
                     pass
 
             pass

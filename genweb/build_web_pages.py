@@ -478,7 +478,7 @@ class build_web_pages(object):
                     pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + ' for ' + genwebid + '\n')
                     pic_issue_file.close()
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="_blank">\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
@@ -548,7 +548,11 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '"><H2>' + person_dict[artifact]['title'] + '</H2></a>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' \
+                                            + person_dict[artifact]['folder'] \
+                                            + '/' + person_dict[artifact]['file'] \
+                                            + '" target="_blank"><H2>' \
+                                            + person_dict[artifact]['title'] + '</H2></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')

@@ -33,8 +33,6 @@ class build_web_pages(object):
         folders_path = \
             'D:/Family History/Family History CD/Research/Individual_Web_Pages'
         project_dict = self._get_proj_dict_from_xml(folders_path)
-        if debug == 'yes':
-            print('__init__ **** project_dict = ', project_dict)
 
         people_ids = sorted(project_dict.keys()) # a list of genwebid
         #generating toc web pages
@@ -42,16 +40,15 @@ class build_web_pages(object):
 
         person_dict = {}
         for person in people_ids:
-            if '' in person:
-                debug = 'no'
-            if debug == 'yes':
-                print('__init__ **** person = ', person)
+            """if 'enter genwebid' in person:
+                debug = 'yes'
+                print('__init__ **** person = ', person)"""
             if person.lower().lstrip('abcdefghijklmnopqrstuvwxyz').isdigit():
-                if debug == 'yes':
-                    print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))
+                """if debug == 'yes':
+                    print('__init__ **** person.lower().lstrip(abcdefghijklmnopqrstuvwxyz) = ', person.lower().lstrip('abcdefghijklmnopqrstuvwxyz'))"""
                 person_dict = project_dict[person]
-                if debug == 'yes':
-                    print('__init__ **** person_dict = ', person_dict)
+                """if debug == 'yes':
+                    print('__init__ **** person_dict = ', person_dict)"""
 
                 self._generate_all_hourglass_webs(person, folders_path)
 
@@ -147,6 +144,10 @@ class build_web_pages(object):
         people_excluded = []
         for genwebid in overall_dictionary: #make sure everybody is in the dictionary
             if len(overall_dictionary[genwebid]) == 0: # if there are no xml files skip this person
+                people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
+                people_excluded_file.write('People excluded are (from _get_proj_dict_from_xml): ' + '\n')
+                people_excluded_file.write(genwebid + ' was excluded because no xml for this person\n')
+                people_excluded_file.close()
                 continue
             #for each xml file, ensure that the people references in <people>
             #   - have legitimate names
@@ -478,7 +479,7 @@ class build_web_pages(object):
                     pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + ' for ' + genwebid + '\n')
                     pic_issue_file.close()
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="_blank">\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
@@ -487,7 +488,7 @@ class build_web_pages(object):
                 artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                 if 'caption' in person_dict[artifact]:
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<p>' + person_dict[artifact]["caption"] + '</p>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<p>' + person_dict[artifact]["caption"] + '</p>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
                 else:
                     f = open(folders_path + '/zzz_Artifact_xml_issue.txt','a')
                     f.write('*****_generate_person_web caption Not Found in person_dict[artifact] = ' + person_dict[artifact] + '\n')
@@ -511,7 +512,7 @@ class build_web_pages(object):
                 #print('Now processing ' + artifact + '.src')
                 if os.path.isfile(artifact_folder_path + '/' + artifact + '.src') and proper_format.match(artifact): # if a src exists, insert it - continued
                     artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict[artifact]['file']) + '"/>\n')
-                    artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n')
+                    artifacts_tbl_lines.append('\t\t<H2>' + person_dict[artifact]['title'] + '</H2>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
                     artifacts_tbl_lines.append('\t\t\n')
                     artifact_source = open(artifact_folder_path + '/' + artifact + '.src', 'r')
@@ -548,11 +549,7 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' \
-                                            + person_dict[artifact]['folder'] \
-                                            + '/' + person_dict[artifact]['file'] \
-                                            + '" target="_blank"><H2>' \
-                                            + person_dict[artifact]['title'] + '</H2></a>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '"><H2>' + person_dict[artifact]['title'] + '</H2></a>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
@@ -585,7 +582,7 @@ class build_web_pages(object):
         f.close()
         pass
 
-        return
+        return      # return from _generate_person_web
 
     def _generate_all_hourglass_webs(self, person, folders_path):
 
@@ -595,8 +592,10 @@ class build_web_pages(object):
         information is my rootsmagic database. Note that "person" is the same
         as person_facts['GenWebID']
         """
-        if 'ConnorJerry0000' in person:
+        debug = 'no'
+        if 'enter genwebid' in person:
             print('_generate_all_hourglass_webs ***** person = ', person)
+            debug = 'yes'
 
         # self._separate_names(person) is of the form:
         # {'BirthYear':'1896','Given':'Archie','Initial':'B', 'Surname':'Abdill'}
@@ -657,7 +656,9 @@ class build_web_pages(object):
 
             buildString = buildString + "</h1>\n"
             headerList.append(buildString)
+            commentString = '\t\t\t<p><a href="mailto:pagerk@gmail.com?subject=' + person_facts['GenWebID'] + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: left; margin-right: auto" height="20"></a>\n'
 
+            headerList.append(commentString)
             hourglasshtmlList = headerList
 
             hourglasshtmlList.append('<TABLE border="0" cellspacing="0" cellpadding="0" align="center">\n')
@@ -901,7 +902,7 @@ class build_web_pages(object):
 
             row = 2
             debug = 'no'
-            if person_facts['OwnerID'] == '':
+            if person_facts['OwnerID'] == 'StrongShirleyR1917':
                 debug = 'yes'
                 print('person = ', person)
                 print('********* childList = ', childList)
@@ -926,7 +927,10 @@ class build_web_pages(object):
                     else:
                         hourglass_table[key] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--' + key + '-->\n'
 
+
+
                     # c7r4, 6, 8, ... 20 add maroon cell
+                    hourglass_table['c7r4'] = '    <td align="center " bgcolor="maroon "></td><!--c7r4-->\n'
                     if row > 2:
                         key = 'c7r' + str(row)
                         hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r4, 6, 8, ... 20-->\n'
@@ -938,14 +942,20 @@ class build_web_pages(object):
                             + childList[child_num]["GenWebID"] + '/index.html"><p>' \
                             + childList[child_num]["FullName"] + '</p></a></td><!--' + key + '-->\n'
 
+                    # c6r3 is always blank
+                    key = 'c6r3'
+                    hourglass_table[key] = '    <td align="center"></td><!--c6r3-->\n'
+
                     # c7r3, 5, 7, ... 19 add maroon cell
                     key = 'c7r' + str(row)
                     hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r3, 5, 7, ... 19-->\n'
 
-                    if row == 5:
-                        # c6r5 add maroon cell
-                        key = 'c6r' + str(row)
-                        hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r5-->\n'
+                    # c6r5 add maroon cell
+                    key = 'c6r5'
+                    hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c6r5-->\n'
+                    # c7r5 add maroon cell
+                    key = 'c7r5'
+                    hourglass_table[key] = '    <td align="center " bgcolor="maroon "></td><!--c7r5-->\n'
 
                     # c8r4, 6, 8, ... 20 add arrow to select child as new target
                     key = 'c8r' + str(row)
@@ -988,7 +998,7 @@ class build_web_pages(object):
                 #  'FullName': 'Page, Robert Kenneth'}]
             	# where these rootsmagic tags are equivalent ; OwnerID = person_ID)
 
-        return
+        return              # end of _generate_all_hourglass_webs
 
 
 def main():

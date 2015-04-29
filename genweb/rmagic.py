@@ -189,6 +189,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
                     genweb_id = genweb_id + person['Given'][0]
                 else:
                     genweb_id = genweb_id + person['Given'][given_num][0]
+            genweb_id = genweb_id.strip('.')
 
             if debug == 'yes':
                 fetch_person_from_name_file.write('fetch_person_from_name--- person[BirthYear] = ' + person['BirthYear'] + '\n')
@@ -305,6 +306,8 @@ def fetch_person_from_ID(name_table, person_table, id):
                     genweb_id = genweb_id + person['Given'][given_num][0]
                     if debug == 'yes':
                         print('genweb_id2 = ', genweb_id)
+
+            genweb_id = genweb_id.strip('.')
 
             if person['BirthYear'] == '0':
                 birth_year = '0000'

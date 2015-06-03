@@ -549,7 +549,7 @@ class build_web_pages(object):
                     artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '"><H2>' + person_dict[artifact]['title'] + '</H2></a>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict[artifact]['folder'] + '/' + person_dict[artifact]['file'] + '" target="_blank"><H2>' + person_dict[artifact]['title'] + '</H2></a>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
@@ -656,9 +656,10 @@ class build_web_pages(object):
 
             buildString = buildString + "</h1>\n"
             headerList.append(buildString)
-            commentString = '\t\t\t<p><a href="mailto:pagerk@gmail.com?subject=' + person_facts['GenWebID'] + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: left; margin-right: auto" height="20"></a>\n'
 
+            commentString = '\t\t\t<p><a href="mailto:pagerk@gmail.com?subject=' + person_facts['GenWebID'] + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: left; margin-right: auto" height="20"></a>\n'
             headerList.append(commentString)
+
             hourglasshtmlList = headerList
 
             hourglasshtmlList.append('<TABLE border="0" cellspacing="0" cellpadding="0" align="center">\n')
@@ -765,7 +766,8 @@ class build_web_pages(object):
                     hourglass_table['c1r2'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r2-->\n'
 
                 # c1r3 target person name and link
-                if os.path.isdir(folders_path + "/" + grandparents['Father']["GenWebID"]):
+                # was: if os.path.isdir(folders_path + "/" + grandparents['Father']["GenWebID"]): --- I don't want a link unless the index.html file exists
+                if os.path.isfile(folders_path + "/" + grandparents['Father']["GenWebID"] + "/index.html"):
                     hourglass_table['c1r3'] = '    <td align="center "><a href=../' \
                             + grandparents['Father']["GenWebID"] + '/index.html><p>' \
                             + grandparents['Father']['FullName'] + '</p></a></td><!--c1r3-->\n'
@@ -808,7 +810,8 @@ class build_web_pages(object):
                     hourglass_table['c1r6'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r6-->\n'
 
                 # c1r7 target person name and link
-                if os.path.isdir(folders_path + "/" + grandparents['Mother']["GenWebID"]):
+                #if os.path.isdir(folders_path + "/" + grandparents['Mother']["GenWebID"]): --- I don't want a link unless the index.html file exists
+                if os.path.isfile(folders_path + "/" + grandparents['Mother']["GenWebID"] + "/index.html"):
                     hourglass_table['c1r7'] = '    <td align="center "><a href=../' \
                             + grandparents['Mother']["GenWebID"] + '/index.html><p>' \
                             + grandparents['Mother']['FullName'] + '</p></a></td><!--c1r7-->\n'

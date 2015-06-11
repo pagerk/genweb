@@ -374,12 +374,17 @@ class build_web_pages(object):
         f.close()
         return              # return from _generate_toc_web
 
+    def _last(self,item):
+        return item[-4:]
+
     def _generate_person_web(self, genwebid, person_dict, folders_path):
-        artifact_ids = sorted(person_dict.keys())
-        #print('artifact_ids = ', artifact_ids)
         person_id_dict = self._separate_names(genwebid)
-        if genwebid == 'ConnorJerry0000':
-            print('!!!!!!!!!!! person_facts = ', rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict))
+        if genwebid == 'StoriesPersonal0000':
+            artifact_ids = sorted(person_dict.keys(), key = self._last)
+        else:
+            artifact_ids = sorted(person_dict.keys())
+            #print('artifact_ids = ', artifact_ids)
+
         person_facts = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
         if person_facts == []:
             people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
@@ -416,10 +421,14 @@ class build_web_pages(object):
         f.write('\t</head>\n')
         f.write('\t<body background="../images/back.gif">\n')
 
-        birth_year = person_facts['BirthYear'] if len(person_facts['BirthYear']) > 2 else '?'
-        death_year = person_facts['DeathYear'] if len(person_facts['DeathYear']) > 2 else '?'
-        f.write('\t\t<h1><a name="Top"></a>' + person_facts["FullName"] + ' - ' + birth_year + ' - ' + death_year + '</h1>\n')
-        f.write('\t\t<a href= "HourGlass.html"><img src="../images/family.bmp"></a>\n')
+        if genwebid == 'StoriesPersonal0000':
+            f.write('\t\t<h1><a name="Top"></a>Personal Stories from our Ancestors</h1>\n')
+        else:
+            birth_year = person_facts['BirthYear'] if len(person_facts['BirthYear']) > 2 else '?'
+            death_year = person_facts['DeathYear'] if len(person_facts['DeathYear']) > 2 else '?'
+            f.write('\t\t<h1><a name="Top"></a>' + person_facts["FullName"] + ' - ' + birth_year + ' - ' + death_year + '</h1>\n')
+            f.write('\t\t<a href= "HourGlass.html"><img src="../images/family.bmp"></a>\n')
+
         if person_dict == {}:
             f.write('\t</body>\n')
             f.write('</html>\n')

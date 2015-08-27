@@ -212,7 +212,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
                     fetch_person_from_name_file.write('person[Given] = ' + person['Given'][0] + '\n')
                     fetch_person_from_name_file.write('person[BirthYear] = ' + person['BirthYear'] + '\n')
     if not person_matches:
-        print('3---exiting fetch_person_from_name---no match found')
+        print('3---exiting fetch_person_from_name---no match found - name_dict = ', name_dict['Surname'], ', ', name_dict['Given'], ', ',  name_dict['BirthYear'])
 
     if debug == 'yes':
         fetch_person_from_name_file.close()

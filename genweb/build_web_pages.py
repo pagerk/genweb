@@ -31,7 +31,7 @@ class build_web_pages(object):
         debug = 'no'
 
         folders_path = \
-            'D:/Family History/Family History CD/Research/Individual_Web_Pages'
+            'C:/Family History/Family History CD/Research/Individual_Web_Pages'
         project_dict = self._get_proj_dict_from_xml(folders_path)
 
         people_ids = sorted(project_dict.keys()) # a list of genwebid
@@ -1015,7 +1015,7 @@ class build_web_pages(object):
 
 def main():
     # Get the RootsMagic database info
-    rmagicPath = 'C:\\Dropbox\\Apps\\RootsMagic\\myfamily.rmgc'
+    rmagicPath = 'C:\\Users\\pager\\Dropbox\\Apps\\RootsMagic\\myfamily.rmgc'
     #rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
     build_web = build_web_pages(rmagicPath)
     build_web.__init__

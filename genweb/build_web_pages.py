@@ -1015,7 +1015,7 @@ class build_web_pages(object):
 
 def main():
     # Get the RootsMagic database info
-    rmagicPath = 'C:\\Users\\pager\\Dropbox\\Apps\\RootsMagic\\myfamily.rmgc'
+    rmagicPath = 'C:\\Users\\pager\\PyScripter_Workspace\\genweb\\myfamily.rmgc'
     #rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
     build_web = build_web_pages(rmagicPath)
     build_web.__init__

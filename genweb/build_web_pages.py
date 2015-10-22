@@ -412,6 +412,7 @@ class build_web_pages(object):
         f.write('\t<head>\n')
         f.write('\t\t<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />\n')
         f.write('\t\t<title>Family History</title>\n')
+        f.write('\t\t<script type="text/javascript" src="../scripts/ImagePatch.js"></script>\n')
         f.write('\t\t<link href="../css/individual.css" type="text/css" rel="stylesheet" />\n')
         f.write('\t\t<style type="text/css">\n')
         f.write('\t\t/*<![CDATA[*/\n')
@@ -419,7 +420,7 @@ class build_web_pages(object):
         f.write('\t\t/*]]>*/\n')
         f.write('\t\t</style>\n')
         f.write('\t</head>\n')
-        f.write('\t<body background="../images/back.gif">\n')
+        f.write('\t<body background="../images/back.gif" onload="patchUpImages()">\n')
 
         if genwebid == 'StoriesPersonal0000':
             f.write('\t\t<h1><a name="Top"></a>Personal Stories from our Ancestors</h1>\n')
@@ -445,6 +446,16 @@ class build_web_pages(object):
         artifacts_tbl_lines = []
         artifacts_tbl_lines.append('\t\t<!-- Beginning of Content -->\n')
         artifacts_tbl_lines.append('\t\t<!-- artifacts -->\n')
+        artifacts_tbl_lines.append('\t\t<p><em><strong>To identify people in a photograph:</em></strong></p>')
+        artifacts_tbl_lines.append('\t\t<ul>')
+        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Click the smiley face next to the photo (the smiley face will change to a black checkmark).</span></li>')
+        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Center the cross shaped cursor on the photograph and select the person</span></li>')
+        artifacts_tbl_lines.append('\t\t<li style="margin-left:2em;font-size: 10pt">a dialogue box will open requesting the name of the person</li>')
+        artifacts_tbl_lines.append('\t\t<li style="margin-left:2em;font-size: 10pt">continue selecting and naming people until you are done</li>')
+        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Select the checkmark</span></li>')
+        artifacts_tbl_lines.append('\t\t<li style="margin-left:2em;font-size: 10pt">your default email program will open with an email ready for you to send. </li>')
+        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Send the email.</span></li>')
+        artifacts_tbl_lines.append('\t\t</ul>')
 
         index_tbl_col = 1
         for artifact in artifact_ids:

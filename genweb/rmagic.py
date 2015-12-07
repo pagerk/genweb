@@ -143,11 +143,12 @@ def fetch_person_from_name(name_table, person_table, name_dict):
     if name_dict['Surname'] == "":
         debug = 'yes'
     if debug == 'yes':
-        fetch_person_from_name_file = open('D:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
+        fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
         fetch_person_from_name_file.write('entering fetch_person_from_name:\n')
         fetch_person_from_name_file.write('name_dict[Surname] = ' + name_dict['Surname'] + '\n')
         fetch_person_from_name_file.write('name_dict[Given] = ' + name_dict['Given'] + '\n')
         fetch_person_from_name_file.write('name_dict[BirthYear] = ' + name_dict['BirthYear'] + '\n')
+        fetch_person_from_name_file.close()
 
     if name_dict['Given'] == '' and name_dict['BirthYear'] == '':
         print('0---fetch_person_from_name--- name_dict = ', name_dict)

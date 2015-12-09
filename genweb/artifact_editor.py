@@ -566,15 +566,17 @@ class Editor(object):
         # I need to make this also work for the case where the path separator is '/'
         artifact_path = self._file_gen["Artifact_Path"].get().replace('\\','/')
         artifact_label = artifact_path.rpartition('/')[2]
+        artifact_label = artifact_label # delete this line !!!!
         file_name = artifact_path + '/' + artifact_ID + artifact_label + '.xml'
 
         referenced_people = ''
         for person_no in range(self._MAX_PEOPLE_REFERENCED):
             if self._ppl[person_no]["Surname"].get() != '-':
-                referenced_people = self._ppl[person_no]["Surname"].get() + \
+                referenced_person = self._ppl[person_no]["Surname"].get() + \
                     self._ppl[person_no]["Given"].get().replace(' ','') + \
-                    self._ppl[person_no]["BirthYear"].get() + ';' \
-                    + referenced_people
+                    self._ppl[person_no]["BirthYear"].get()
+                fully_referenced_person = referenced_person + self._get_mother_genwebid(referenced_person)
+                referenced_people = fully_referenced_person + ';' + referenced_people
         referenced_people = referenced_people.rstrip(';')
 
 
@@ -631,6 +633,108 @@ class Editor(object):
             self._ppl[ppl_no]["ID"].set('-')
 
 
+
+    def _separate_names(self,item):
+        """given a string that is a concatenation of names with their first
+            letters capitalized [e.g. PageRobertK1949], separate them into
+            separate words or characters and the date -
+            assumes person IDs contain no spaces and every person's ID has
+            a date or 0000
+            The results are a dictionary with the following keys
+            'BirthYear'
+            'Surname'
+            'Given'
+            'Initial'"""
+
+        # extract the date
+        debug = 'no'
+        if item == "":
+            debug = 'yes'
+        person = {}
+        person['BirthYear'] = item.strip("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'")
+        item = item.strip('0123456789')
+
+
+        people_re = re.compile(r"([A-Z][a-z]+)")
+
+        names = people_re.split(item)
+        names = [x for x in names if x != '']
+
+        surname_exceptions = ["O'",'ap','de','De','le','Le','Mc','Mac','Van','of']
+        givenname_exceptions = ['De']
+
+        person['Surname'] = ''
+        person['Given'] = ''
+        person['Initial'] = ''
+
+        if names[0] in surname_exceptions:
+            person['Surname'] = names[0] + names[1]
+            if names[2] in givenname_exceptions:
+                person['Given'] = names[2] + names[3]
+                if len(names) == 5: person['Initial'] = names[4]
+            else:
+                person['Given'] = names[2]
+                if len(names) == 4: person['Initial'] = names[3]
+
+        else:
+            person['Surname'] = names[0]
+            if names[1] in givenname_exceptions:
+                person['Given'] = names[1] + names[2]
+                if len(names) == 4: person['Initial'] = names[3]
+            else:
+                person['Given'] = names[1]
+                if len(names) == 3: person['Initial'] = names[2]
+
+        person['FullName'] = person['Given'] + person['Initial'] + person['Surname']
+
+        if item != person['Surname'] + person['Given'] + person['Initial'] :
+            print('item = ', item, ' person full name = ', person['Given'], ' ', person['Initial'], ' ', person['Surname'])
+
+
+        return person
+
+    def _get_mother_genwebid(self, target_genwebid):
+        debug = 'False'
+        proper_format = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+        if not proper_format.match(target_genwebid):
+            chg_to_long_id_file = open('folders_path' + '/zzz_xml_file_name_issue.txt','a')
+            chg_to_long_id_file.write('Improper format for target genwebid ' + target_genwebid + '\n')
+            chg_to_long_id_file.close()
+            return ''
+        else:
+            person_id_dict = self._separate_names(target_genwebid)
+            person_matches = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
+            if len(person_matches) == 0:
+                chg_to_long_id_file = open('folders_path' + '/zzz_xml_file_name_issue.txt','a')
+                chg_to_long_id_file.write('_get_mother_genwebid - Could not find rmagic match for person with target_genwebid = ' + target_genwebid + '\n')
+                chg_to_long_id_file.close()
+                return ''
+            elif len(person_matches) > 1:
+                chg_to_long_id_file = open('folders_path' + '/zzz_xml_file_name_issue.txt','a')
+                chg_to_long_id_file.write('_get_mother_genwebid - Multiple matches for rmagic person with target_genwebid = ' + target_genwebid + '\n')
+                for match_person in person_matches:
+                    chg_to_long_id_file.write('Multiple matches for rmagic person. Match = ' + match_person['GenWebID'] + '\n')
+                chg_to_long_id_file.close()
+                return ''
+            parents = rmagic.fetch_parents_from_ID(\
+                                    self._tables['PersonTable'],\
+                                    self._tables['NameTable'],\
+                                    self._tables['FamilyTable'],\
+                                    person_matches[0]['OwnerID'])
+
+            if debug == True and target_genwebid == "":
+                print("_get_mother_genwebid - target_genwebid = ", target_genwebid)
+                print("parents['Mother']['GenWebID'] = ", parents['Mother']['GenWebID'])
+                print("parents['Mother']['Surname'] = ", parents['Mother']['Surname'])
+                print("parents['Mother']['Given'][0] = ", parents['Mother']['Given'][0])
+            if parents['Mother']['GenWebID'] == '' \
+                or len(parents['Mother']['Surname']) == 0 \
+                or  len(parents['Mother']['Given'][0]) == 0:
+                mother_genwebid = '-'
+            else:
+                mother_genwebid = parents['Mother']['GenWebID']
+
+        return mother_genwebid
 
 def main():
     # Get the RootsMagic database info

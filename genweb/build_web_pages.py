@@ -59,16 +59,61 @@ class build_web_pages(object):
         winsound.Beep(500,1000)
         winsound.Beep(500,1000)
 
+    def _get_mother_genwebid(self, target_genwebid):
+        debug = 'False'
+        proper_format = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+        if not proper_format.match(target_genwebid):
+            chg_to_long_id_file = open('folders_path' + '/zzz_xml_file_name_issue.txt','a')
+            chg_to_long_id_file.write('Improper format for target genwebid ' + target_genwebid + '\n')
+            chg_to_long_id_file.close()
+            return ''
+        else:
+            person_id_dict = self._separate_names(target_genwebid)
+            person_matches = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], person_id_dict)
+            if len(person_matches) == 0:
+                chg_to_long_id_file = open('folders_path' + '/zzz_xml_file_name_issue.txt','a')
+                chg_to_long_id_file.write('_get_mother_genwebid - Could not find rmagic match for person with target_genwebid = ' + target_genwebid + '\n')
+                chg_to_long_id_file.close()
+                return ''
+            elif len(person_matches) > 1:
+                chg_to_long_id_file = open('folders_path' + '/zzz_xml_file_name_issue.txt','a')
+                chg_to_long_id_file.write('_get_mother_genwebid - Multiple matches for rmagic person with target_genwebid = ' + target_genwebid + '\n')
+                for match_person in person_matches:
+                    chg_to_long_id_file.write('Multiple matches for rmagic person. Match = ' + match_person['GenWebID'] + '\n')
+                chg_to_long_id_file.close()
+                return ''
+            parents = rmagic.fetch_parents_from_ID(\
+                                    self._tables['PersonTable'],\
+                                    self._tables['NameTable'],\
+                                    self._tables['FamilyTable'],\
+                                    person_matches[0]['OwnerID'])
+
+            if debug == True and target_genwebid == "":
+                print("_get_mother_genwebid - target_genwebid = ", target_genwebid)
+                print("parents['Mother']['GenWebID'] = ", parents['Mother']['GenWebID'])
+                print("parents['Mother']['Surname'] = ", parents['Mother']['Surname'])
+                print("parents['Mother']['Given'][0] = ", parents['Mother']['Given'][0])
+            if parents['Mother']['GenWebID'] == '' \
+                or len(parents['Mother']['Surname']) == 0 \
+                or  len(parents['Mother']['Given'][0]) == 0:
+                mother_genwebid = '-'
+            else:
+                mother_genwebid = parents['Mother']['GenWebID']
+
+        return mother_genwebid
+
 
     def _get_proj_dict_from_xml(self,folders_path):
         """
         Build a dictionary with each person's genwebid as a key. Each person's
         key will be attached to a dictionary containing zero or more artifacts.
         Each artifact will consist of a key (the artifact_id) of the
-        form: YYYYMMDD##Last_nameFirst_nameMiddle_initialYYYY where the
-        first date in the id is the date of the artifact (birth, death,
-        marriage, etc.) and the last date is the birth year of the person whose
-        folder has "custody" of the artifact. Associated with that artifact key
+        form:
+        YYYYMMDD##Last_nameFirst_nameMiddle_initialYYYYLast_nameFirst_nameMiddle_initialYYYY
+        where the first date in the id is the date of the artifact (birth, death,
+        marriage, etc.) followed by the genwebid of the person whose
+        folder has "custody" of the artifact which is followed by the genwebid
+        of the persons mother. Associated with that artifact key
         is a dictionary of the artifact description. The artifact description
         has a key indicating the type of artifact ('inline','picture','href')
         and the data elements describing the artifact and it's location: 'path',
@@ -76,7 +121,7 @@ class build_web_pages(object):
         """
         os.chdir(folders_path)
         # I only want folders that have at least a first and last name with a four digit number
-        folders = glob.glob("[a-zA-Z']*[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+        folders = glob.glob("[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]([-]|[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9])")
         #print('folders = ', folders)
         folder_file_contents = []
         overall_dictionary = {}
@@ -91,13 +136,12 @@ class build_web_pages(object):
 
             big_dictionary = {}
             for file_name in folder_files:
-
                 if not (folder in file_name): # if  xml file name doesn't match folder
                     xml_file_name_issue_file = open(folders_path + '/zzz_xml_file_name_issue.txt','a')
                     xml_file_name_issue_file.write('*****_get_proj_dict_from_xml file name ' + file_name + ' should Not be in ' + folder + '\n')
                     xml_file_name_issue_file.close()
                     continue
-                proper_format = re.compile("[+]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
+                proper_format = re.compile("[+]*[0-9]{10}[A-Za-z']+[A-Z][a-z]*[0-9]{4}([-]|[A-Za-z']+[A-Z][a-z]*[0-9]{4})")
                 if not proper_format.match(file_name.rstrip('.xml')):
                     xml_file_name_issue_file = open(folders_path + '/zzz_xml_file_name_issue.txt','a')
                     xml_file_name_issue_file.write('*****_get_proj_dict_from_xml file name ' + folder + '/' + file_name + ' does not have the proper data format\n')
@@ -137,12 +181,12 @@ class build_web_pages(object):
             overall_dictionary[genwebid] = big_dictionary
         #print('overall_dictionary a = ', overall_dictionary)
         #print('overall_dictionary a keys = ', sorted(overall_dictionary.keys()))
-
+#!!!! need to pick up from here
         people_re = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
         # people excluded are those with only one name and a date
         people_excluded_re = re.compile('[A-Z][a-z]+[0-9][0-9][0-9][0-9]')
         people_excluded = []
-        for genwebid in overall_dictionary: #make sure everybody is in the dictionary
+        for genwebid in overall_dictionary: # make sure everybody is in the dictionary
             if len(overall_dictionary[genwebid]) == 0: # if there are no xml files skip this person
                 people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt','a')
                 people_excluded_file.write('People excluded are (from _get_proj_dict_from_xml): ' + '\n')

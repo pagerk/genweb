@@ -139,10 +139,10 @@ def fetch_person_from_name(name_table, person_table, name_dict):
    	where these rootsmagic tags are equivalent ; OwnerID = person_ID
     """
 
-    debug = 'no'
-    if name_dict['Surname'] == "":
-        debug = 'yes'
-    if debug == 'yes':
+    debug = False
+    if name_dict['FullName'] == "":
+        debug = False
+    if debug == True:
         fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
         fetch_person_from_name_file.write('entering fetch_person_from_name:\n')
         fetch_person_from_name_file.write('name_dict[Surname] = ' + name_dict['Surname'] + '\n')
@@ -152,29 +152,39 @@ def fetch_person_from_name(name_table, person_table, name_dict):
 
     if name_dict['Given'] == '' and name_dict['BirthYear'] == '':
         print('0---fetch_person_from_name--- name_dict = ', name_dict)
-        debug = 'yes'
+        debug = False
     person_matches = []
-    for person in name_table:
+    #if debug: print('name_table = ', name_table)
+    for person in name_table: # only testing their first middle initial, if it exists
+        if person['Given'][0] == '':
+            debug = True
+        if len(person['Given']) == 1:
+            person['Given'].append('')
         if all((
             person['Surname'].replace(' ', '') == name_dict['Surname'].replace(' ', ''),
             person['Given'][0] == name_dict['Given'],
+            person['Given'][1][0:1] == name_dict['Initial'][0:1],
             int(person['BirthYear']) == int(name_dict['BirthYear']),
             person['IsPrimary'] == '1',
         )):
             person['Surname'] = person['Surname'].replace(' ', '')
-            if debug == 'yes':
+            if debug == True:
+                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
                 fetch_person_from_name_file.write('1---fetch_person_from_name--- match person = \n')
                 fetch_person_from_name_file.write('person[Surname] = ' + person['Surname'] + '\n')
                 fetch_person_from_name_file.write('person[Given] = ' + person['Given'][0] + '\n')
                 fetch_person_from_name_file.write('person[BirthYear] = ' + person['BirthYear'] + '\n')
+                fetch_person_from_name_file.close()
 
             for target in person_table:
                 if target['PersonID'] == person['OwnerID']:
-                    if debug == 'yes':
+                    if debug == True:
+                        fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
                         fetch_person_from_name_file.write('---fetch_person_from_name--- target =\n')
                         fetch_person_from_name_file.write('target[PersonID] = ' + target['PersonID'] + '\n')
                         fetch_person_from_name_file.write('target[ParentID] = ' + str(target['ParentID']) + '\n')
                         fetch_person_from_name_file.write('target[SpouseID] = ' + target['SpouseID'] + '\n')
+                        fetch_person_from_name_file.close()
                     person['Sex'] = 'male' if target['Sex'] == '0' else 'female'
                     break
 
@@ -186,37 +196,51 @@ def fetch_person_from_name(name_table, person_table, name_dict):
 
             genweb_id = person['Surname']
             for given_num in range(len(person['Given'])):
+                if debug == True:
+                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                    fetch_person_from_name_file.write('---fetch_person_from_name line 201--- genweb_id = ' + genweb_id + '\n')
+                    fetch_person_from_name_file.write('---fetch_person_from_name line 202--- person[Given][given_num] = ' + person['Given'][given_num] + '\n')
+                    fetch_person_from_name_file.write('---fetch_person_from_name line 203--- given_num = ' + str(given_num) + '\n')
+                    fetch_person_from_name_file.close()
                 if given_num == 0:
                     genweb_id = genweb_id + person['Given'][0]
-                else:
-                    genweb_id = genweb_id + person['Given'][given_num][0]
+                elif given_num == 1:
+                    genweb_id = genweb_id + person['Given'][given_num][0:1]
+                elif given_num == 2:
+                    genweb_id = genweb_id + person['Given'][given_num-1][0:1] + person['Given'][given_num][0:1]
+                elif given_num == 3:
+                    genweb_id = genweb_id + person['Given'][given_num-2][0:1] + person['Given'][given_num-1][0:1] + person['Given'][given_num][0:1]
             genweb_id = genweb_id.strip('.')
 
-            if debug == 'yes':
+            if debug == True:
+                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
                 fetch_person_from_name_file.write('fetch_person_from_name--- person[BirthYear] = ' + person['BirthYear'] + '\n')
+                fetch_person_from_name_file.close()
             if person['BirthYear'] == '0':
                 person['BirthYear'] = '0000'
             if len(person['BirthYear']) == 3:
                 person['BirthYear'] = '0' + person['BirthYear']
-                if debug == 'yes':
+                if debug == True:
+                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
                     fetch_person_from_name_file.write('fetch_person_from_name--- 3 digit corrected person[BirthYear] = ' + person['BirthYear'] + '\n')
+                    fetch_person_from_name_file.close()
 
             genweb_id = genweb_id + person['BirthYear']
             person['GenWebID'] = genweb_id
 
             person_matches.append(person)
 
-            if debug == 'yes':
+            if debug == True:
                 for person in person_matches:
+                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
                     fetch_person_from_name_file.write('2---exiting fetch_person_from_name:--- person_matches = \n')
                     fetch_person_from_name_file.write('person[Surname] = ' + person['Surname'] + '\n')
                     fetch_person_from_name_file.write('person[Given] = ' + person['Given'][0] + '\n')
                     fetch_person_from_name_file.write('person[BirthYear] = ' + person['BirthYear'] + '\n')
-    if not person_matches:
-        print('3---exiting fetch_person_from_name---no match found - name_dict = ', name_dict['Surname'], ', ', name_dict['Given'], ', ',  name_dict['BirthYear'])
+                    fetch_person_from_name_file.close()
 
-    if debug == 'yes':
-        fetch_person_from_name_file.close()
+    if not person_matches:
+        print('3---exiting fetch_person_from_name---no match found - name_dict = ', name_dict)
 
     if not person_matches:
         _moduleLogger.debug("No person found: %r", name_dict)
@@ -274,12 +298,12 @@ def fetch_person_from_ID(name_table, person_table, id):
           'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
           'FullName': 'Page, Robert Kenneth'}]
     """
-    debug = 'no'
-    if id == '':
-        debug = 'yes'
+    debug = False
+    if id == 'GibbonCharlotte1850':
+        debug = True
     for person in name_table:
         if person['OwnerID'] == id and person['IsPrimary'] == '1':
-            if debug == 'yes':
+            if debug == True:
                 print('fetch_person_from_ID person = ', person)
             for target in person_table:
                 if target['PersonID'] == person['OwnerID']:
@@ -294,18 +318,19 @@ def fetch_person_from_ID(name_table, person_table, id):
 
             genweb_id = person['Surname']
 
-            if debug == 'yes':
+            if debug == True:
                 print('genweb_id0 = ', genweb_id)
             for given_num in range(len(person['Given'])):
                 if given_num == 0:
                     genweb_id = genweb_id + person['Given'][0]
-                    if debug == 'yes':
+                    if debug == True:
                         print('genweb_id1 = ', genweb_id)
                 else:
-                    if debug == 'yes':
-                        print('middle = ', middle)
-                    genweb_id = genweb_id + person['Given'][given_num][0]
-                    if debug == 'yes':
+                    if debug == True:
+                        print('given_num = ', given_num)
+                    if len(person['Given'][given_num]) > 0:
+                        genweb_id = genweb_id + person['Given'][given_num][0]
+                    if debug == True:
                         print('genweb_id2 = ', genweb_id)
 
             genweb_id = genweb_id.strip('.')
@@ -319,7 +344,7 @@ def fetch_person_from_ID(name_table, person_table, id):
 
             genweb_id = genweb_id + birth_year
             person['GenWebID'] = genweb_id
-            if debug == 'yes':
+            if debug == True:
                 print('person = ', person)
                 print('++++++++++++++++++++++++++++++++++++++')
             return person

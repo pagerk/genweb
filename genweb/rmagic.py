@@ -144,7 +144,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
     if name_dict['Surname'] == "":
         debug = True
     if debug == True:
-        fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+        fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
         fetch_person_from_name_file.write('entering fetch_person_from_name:\n')
         fetch_person_from_name_file.write('line 149 - name_dict[Surname] = ' + name_dict['Surname'] + '\n')
         fetch_person_from_name_file.write('line 150 - name_dict[Given] = ' + name_dict['Given'] + '\n')
@@ -171,7 +171,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
         )):
             person['Surname'] = person['Surname'].replace(' ', '')
             if debug == True:
-                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
                 fetch_person_from_name_file.write('\n \n line 174 - name_dict = ' + str(name_dict) + '\n')
                 fetch_person_from_name_file.write('1---fetch_person_from_name--- match person = \n')
                 fetch_person_from_name_file.write('line 176 - person[Surname] = ' + person['Surname'] + '\n')
@@ -182,7 +182,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             for target in person_table:
                 if target['PersonID'] == person['OwnerID']:
                     if debug == True:
-                        fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                        fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
                         fetch_person_from_name_file.write('---fetch_person_from_name--- target =\n')
                         fetch_person_from_name_file.write('line 186 - target[PersonID] = ' + target['PersonID'] + '\n')
                         fetch_person_from_name_file.write('line 187 - target[ParentID] = ' + str(target['ParentID']) + '\n')
@@ -200,7 +200,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             genweb_id = person['Surname']
             for given_num in range(len(person['Given'])):
                 if debug == True:
-                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
                     fetch_person_from_name_file.write('---fetch_person_from_name line 203--- genweb_id = ' + genweb_id + '\n')
                     fetch_person_from_name_file.write('---fetch_person_from_name line 204--- person[Given][given_num] = ' + person['Given'][given_num] + '\n')
                     fetch_person_from_name_file.write('---fetch_person_from_name line 205--- given_num = ' + str(given_num) + '\n')
@@ -216,7 +216,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             genweb_id = genweb_id.strip('.')
 
             if debug == True:
-                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
                 fetch_person_from_name_file.write('fetch_person_from_name line 219--- person[BirthYear] = ' + person['BirthYear'] + '\n')
                 fetch_person_from_name_file.close()
             if person['BirthYear'] == '0':
@@ -224,7 +224,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             if len(person['BirthYear']) == 3:
                 person['BirthYear'] = '0' + person['BirthYear']
                 if debug == True:
-                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                    fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
                     fetch_person_from_name_file.write('fetch_person_from_name line 227--- 3 digit corrected person[BirthYear] = ' + person['BirthYear'] + '\n')
                     fetch_person_from_name_file.close()
 
@@ -234,7 +234,7 @@ def fetch_person_from_name(name_table, person_table, name_dict):
             person_matches.append(person)
 
             if debug == True:
-                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages - Long/zzzRM_fetch_person_from_name.txt','a')
+                fetch_person_from_name_file = open('C:/Family History/Family History CD/Research/Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
                 fetch_person_from_name_file.write('\n \n 2---exiting fetch_person_from_name:--- person_matches = \n')
                 for person in person_matches:
                     fetch_person_from_name_file.write(' line 239 - person[Surname] = ' + person['Surname'] + '\n')

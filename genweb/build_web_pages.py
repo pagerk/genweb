@@ -33,7 +33,7 @@ class build_web_pages(object):
         refresh_get_proj_dict_from_xml = False
         generate_web_pages = True
 
-        folders_path = 'C:/Family History/Family History CD/Research/Individual_Web_Pages'
+        folders_path = 'C:\Family_History\FamilyHistoryWeb\Individual_Web_Pages'
         os.chdir(folders_path)
         dictionaries_path = folders_path + '/___dictionaries'
         if refresh_get_proj_dict_from_xml == True: self._get_proj_dict_from_xml(folders_path)
@@ -1060,46 +1060,7 @@ class build_web_pages(object):
             persons_mother = three_gen_family['tgt_parents']['Mother']['GenWebID']
         else:
             persons_mother = '-'
-        """
-        #This builds the standard html header I use for the family history files
-        #print('person = ', person, '  OwnerID = ', person_facts['OwnerID'])
-        #print('person_facts = ', person_facts)
-        headerList = []
-        headerList.append("<html>\n")
-        headerList.append("<head>\n")
-        headerList.append('    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />' + "\n")
-        given_names = ''
-        for names in person_facts['Given']:
-            given_names = given_names + ' ' + names
-        headerList.append('    <title>' + person_facts['FullName'] + '</title>' + "\n")
-        headerList.append('    <link href="../css/individual.css" type="text/css" rel="stylesheet" />' + "\n")
-        headerList.append('    <style type="text/css">' "\n")
-        headerList.append('    /*<![CDATA[*/' + "\n")
-        headerList.append(' div.ReturnToTop {text-align: right}' + "\n")
-        headerList.append('    /*]]>*/' + "\n")
-        headerList.append("    </style>\n")
-        headerList.append("</head>\n")
-        headerList.append('<body background="../images/back.gif">' + "\n")
-        nickname = ''
-        if len(person_facts['Nickname']) > 1: nickname = ' "'+ person_facts['Nickname'] + '" '
-        buildString = '    <h1><a name="Top"></a>' + person_facts['FullName'] + nickname
-        if debug == True: print('\n line 943 _generate_all_hourglass_webs:  person_facts[BirthYear] = ', person_facts["BirthYear"], '     type(person_facts["BirthYear"]) = ',  type(person_facts["BirthYear"]))
-        if person_facts['BirthYear'] == '': person_facts['BirthYear'] = '????' #if not birth year then pass
-        buildString = buildString + ' - ' + person_facts['BirthYear']
-        if debug == True: print('\n line 949 _generate_all_hourglass_webs: person_facts[DeathYear] = ', person_facts["DeathYear"], \
-                '     type(person_facts["DeathYear"]) = ',  type(person_facts["DeathYear"]))
-        if person_facts['DeathYear'] == '0':
-            pass
-        else:
-            buildString = buildString + ' - ' + person_facts['DeathYear']
-        buildString = buildString + "</h1>\n"
-        headerList.append(buildString)
-        if persons_mother == '': persons_mother = '-'
-        commentString = '\t\t\t<p><a href="mailto:pagerk@gmail.com?subject=' + person + persons_mother + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: left; margin-right: auto" height="20"></a>\n'
-        headerList.append(commentString)
-        hourglasshtmlList = headerList
-        hourglasshtmlList.append('<table border="0" cellspacing="0" cellpadding="0" align="center">\n')
-        """
+
         hourglass_table = {}
 
         # Row 1

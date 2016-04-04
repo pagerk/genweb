@@ -30,7 +30,7 @@ class build_web_pages(object):
         debug = False
         generate_Table_of_Contents = False
         generate_hourglass = False
-        refresh_get_proj_dict_from_xml = False
+        refresh_get_proj_dict_from_xml = True
         generate_web_pages = True
 
         folders_path = 'C:\Family_History\FamilyHistoryWeb\Individual_Web_Pages'
@@ -159,7 +159,7 @@ class build_web_pages(object):
         !!! I need to decide the form of the return   {}
         """
         debug = False
-        if targets_long_genwebid == 'ShaylorIsrael1851-':
+        if targets_long_genwebid == '':
             debug = True
         three_gen_family = {}
         # this will be used to separate the genwebid (target_person) into the persons_id and the mothers_id
@@ -176,7 +176,7 @@ class build_web_pages(object):
                 tgt_person_facts = three_gen_family['tgt_person_facts'] = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], name_dict)[0]
             except:
                 tgt_person_facts = three_gen_family['tgt_person_facts'] = rmagic.fetch_person_from_name(self._tables['NameTable'], self._tables['PersonTable'], name_dict)
-                print('\n _get_3g_family - line 178 tgt_person_facts = ', tgt_person_facts, '\n name_dict = ', name_dict)
+                print('\n _get_3g_family - line 179 tgt_person_facts = ', tgt_person_facts, '\n name_dict = ', name_dict)
         else:
             tgt_person_facts = self._get_mothers_child(tgt_person, tgt_persons_mother, folders_path)
             three_gen_family['tgt_person_facts'] = tgt_person_facts
@@ -225,20 +225,22 @@ class build_web_pages(object):
         if debug: print('\n _get_3g_family - line 225 tgt_parents = ', str(three_gen_family['tgt_parents']))
 
         tgt_fathers_Owner_ID = three_gen_family['tgt_parents']['Father']['OwnerID']
-        if tgt_fathers_Owner_ID != '': three_gen_family['tgt_fathers_parents'] = rmagic.fetch_parents_from_ID(\
+        if tgt_fathers_Owner_ID != '':
+            three_gen_family['tgt_fathers_parents'] = rmagic.fetch_parents_from_ID(\
                                                 self._tables['PersonTable'],\
                                                 self._tables['NameTable'],\
                                                 self._tables['FamilyTable'],\
                                                 tgt_fathers_Owner_ID)
-        if debug: print('\n _get_3g_family - line 233 tgt_fathers_parents = ', str(three_gen_family['tgt_fathers_parents']))
+            if debug: print('\n _get_3g_family - line 234 tgt_fathers_parents = ', str(three_gen_family['tgt_fathers_parents']))
 
         tgt_mothers_Owner_ID = three_gen_family['tgt_parents']['Mother']['OwnerID']
-        if tgt_mothers_Owner_ID != '': three_gen_family['tgt_mothers_parents'] = rmagic.fetch_parents_from_ID(\
+        if tgt_mothers_Owner_ID != '':
+            three_gen_family['tgt_mothers_parents'] = rmagic.fetch_parents_from_ID(\
                                                 self._tables['PersonTable'],\
                                                 self._tables['NameTable'],\
                                                 self._tables['FamilyTable'],\
                                                 tgt_mothers_Owner_ID)
-        if debug: print('\n _get_3g_family - line 241 tgt_mothers_parents = ', str(three_gen_family['tgt_mothers_parents']))
+            if debug: print('\n _get_3g_family - line 243 tgt_mothers_parents = ', str(three_gen_family['tgt_mothers_parents']))
 
         # I now have the target person's spouse's info
         three_gen_family['spouseList'] = rmagic.fetch_spouses_from_ID(\
@@ -257,7 +259,7 @@ class build_web_pages(object):
                                                         three_gen_family['spouseList'][spouse_num]['OwnerID'])
             three_gen_family['spouseList'][spouse_num]['spouse_parents'] = spouse_parents
         """
-        if debug: print('\n _get_3g_family - line 260 spouselist = ', str(three_gen_family['spouseList']))
+        if debug: print('\n _get_3g_family - line 262 spouselist = ', str(three_gen_family['spouseList']))
         """
         Given a person's PersonID (AKA OwnerID) fetch the spouse's NameTable
         entries for that person.
@@ -343,11 +345,12 @@ class build_web_pages(object):
         for folder in folders: #step through each folder
             person_info = []
             long_genwebid = folder.strip()
-            if folder != '': continue
+            #if folder != '': continue
             if folder == '':
                 debug = True
             if long_genwebid == '':
                 continue
+            # if there is an error in the following line it is probably caused my either and incomplete xml reference or an incorrect folder name (not a long genwebid)
             person_stuff = people_re.findall(folder)[0] # of the form: ['PersondateMotherdate','Persondate','Motherdate']
             if len(person_stuff) == 0 or len(person_stuff[0]) < 3:
                 print('\n _get_proj_dict_from_xml line 179 long_genwebid = ', long_genwebid, '   person_stuff = ', person_stuff)
@@ -613,6 +616,8 @@ class build_web_pages(object):
             debug = False
             if target_person =='':
                 debug = True
+            if target_person =='StoriesPersonal0000-':
+                continue
 
             # this will be used to ensure that the artifact xml filename is has the proper form
             person_stuff = people_re.findall(target_person)[0] # of the form: ['PersondateMotherdate','Persondate','Motherdate']
@@ -689,7 +694,7 @@ class build_web_pages(object):
                 f.write('\t\t\t\t</td>\n')
                 f.write('\t\t\t</tr>\n')
                 f.write('\t\t</table>\n')
-                f.write('\t\t<table align="center" bgcolor="#FFCCCC" border cellpadding="8" cellspacing="4" cols="3">\n')
+                f.write('\t\t<table align="center" background="./images/back.gif" border cellpadding="8" cellspacing="4" cols="3">\n')
                 f.write('\t\t\t<tr>\n')
 
                 table_col = table_col + 1
@@ -831,12 +836,12 @@ class build_web_pages(object):
 
 
         index_html_file = open(person_folder_path + '/index.html','w')
-        index_html_file.write('<!DOCTYPE html PUBLIC"-//W3C//DTD HTML 4.01 Transitional//EN" >\n')
+        index_html_file.write('<!DOCTYPE html ')
         index_html_file.write('<html>\n')
         index_html_file.write('\t<head>\n')
         index_html_file.write('\t\t<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />\n')
         index_html_file.write('\t\t<title>Family History</title>\n')
-        index_html_file.write('\t\t<script type="text/javascript" src="../___scripts/ImagePatch.js"></script>\n')
+        index_html_file.write('\t\t<script type="text/javascript" src="../scripts/ImagePatch.js"></script>\n')
         index_html_file.write('\t\t<link href="../css/individual.css" type="text/css" rel="stylesheet" />\n')
         index_html_file.write('\t\t<style type="text/css">\n')
         index_html_file.write('\t\t/*<![CDATA[*/\n')
@@ -848,6 +853,7 @@ class build_web_pages(object):
 
         if person == 'StoriesPersonal0000':
             index_html_file.write('\t\t<h1><a name="Top"></a>Personal Stories from our Ancestors</h1>\n')
+            index_html_file.write('\t\t\t\t<a href= "../../index.html"><img src="../images/Home.jpg"></a>\n')
         else:
 
             nickname = ''
@@ -931,10 +937,10 @@ class build_web_pages(object):
                     pic_issue_file = open(folders_path + '/zzz_Artifact_picture_issue.txt','a')
                     pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + ' for ' + genwebid + '\n')
                     pic_issue_file.close()
+                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
                 if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
-                if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it - continued
+                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../images/zoom.jpg' + '" target="Resource Window">\n')
                     artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
                 artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
@@ -965,7 +971,7 @@ class build_web_pages(object):
                 if debug: print('_generate_person_web line 806: Now processing ' + artifact + '.src')
                 if os.path.isfile(artifact_folder_path + '/' + artifact + '.src') and proper_format.match(artifact): # if a src exists, insert it - continued
                     artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict['artifacts_info'][artifact]['file']) + '"/>\n')
-                    artifacts_tbl_lines.append('\t\t<H2>' + person_dict['artifacts_info'][artifact]['title'] + '</H2>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
+                    artifacts_tbl_lines.append('\t\t<H2  style="text-align:center;margin-left:auto;margin-right:auto;">' + person_dict['artifacts_info'][artifact]['title'] + '</H2>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
                     artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
                     artifacts_tbl_lines.append('\t\t\n')
                     artifact_source = open(artifact_folder_path + '/' + artifact + '.src', 'r')
@@ -1048,15 +1054,16 @@ class build_web_pages(object):
         as person_facts['GenWebID']
         """
         debug = False
-        if person == 'ShaylorIsrael1851-':
-            print('line 1051 _generate_all_hourglass_webs ***** person = ', person)
+        if person == '':
+            debug = True
+        if person == 'StoriesPersonal0000-':
             return
         short_genwebid_re = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9]{4}")
         long_genwebid_re = re.compile("(([A-Za-z']+[A-Z][a-z]*[0-9]{4})([-]|[A-Za-z']+[A-Z][a-z]*[0-9]{4}))")
         three_gen_family = self._get_3g_family(person, folders_path)
         person_facts = three_gen_family['tgt_person_facts']
         person = person_facts['GenWebID']
-        if three_gen_family['tgt_parents']['Mother'] != '':
+        if three_gen_family['tgt_parents']['Mother']['GenWebID'] != '':
             persons_mother = three_gen_family['tgt_parents']['Mother']['GenWebID']
         else:
             persons_mother = '-'
@@ -1544,8 +1551,8 @@ class build_web_pages(object):
 
 def main():
     # Get the RootsMagic database info
-    rmagicPath = 'C:\\Users\\pager\\PyScripter_Workspace\\genweb\\myfamily.rmgc'
-    #rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
+    #rmagicPath = 'C:\\Users\\pager\\PyScripter_Workspace\\genweb\\myfamily.rmgc'
+    rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
     build_web = build_web_pages(rmagicPath)
     build_web.__init__
 

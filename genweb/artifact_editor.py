@@ -738,7 +738,7 @@ class Editor(object):
 
 def main():
     # Get the RootsMagic database info
-    rmagicPath = 'C:\\Users\\pager\\PyScripter_Workspace\\genweb\\myfamily.rmgc'
+    rmagicPath = 'C:\\Users\\pager\\Dropbox\\RootsMagic Database\\myfamily.rmgc'
     #rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
     editor = Editor(rmagicPath)
     editor.mainloop()

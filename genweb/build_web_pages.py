@@ -28,8 +28,8 @@ class build_web_pages(object):
         self._matched_persons = []
 
         debug = False
-        generate_Table_of_Contents = False
-        generate_hourglass = False
+        generate_Table_of_Contents = True
+        generate_hourglass = True
         refresh_get_proj_dict_from_xml = True
         generate_web_pages = True
 
@@ -47,6 +47,7 @@ class build_web_pages(object):
 
         person_dict = {}
         for person in people_ids:# person is long_genwebid
+            #if person != "HughsMarillynM1925CorbettVerneI1892": continue
             person_stuff = people_re.findall(person)[0] # of the form: ['PersondateMotherdate','Persondate','Motherdate']
             if len(person_stuff) >= 3:
                 file = dictionaries_path + '/' + person + '.pkl'
@@ -65,10 +66,10 @@ class build_web_pages(object):
                 if debug == True:
                     print('__init__ **** person_dict = ', person_dict)
 
-                if generate_hourglass:
-                    self._generate_all_hourglass_webs(person, folders_path)
-
                 if generate_web_pages:self._generate_person_web(person, person_dict, folders_path)
+
+                if generate_hourglass:  # this must come after generate_web_pages - don't want hourglass if no web page
+                    self._generate_all_hourglass_webs(person, folders_path)
 
         t1 = timer()
         print('execution time =' , int((t1 - t0)//60), ' minutes, ',  int((t1 - t0)%60), ' seconds or ', (t1 - t0), ' seconds total')
@@ -90,6 +91,8 @@ class build_web_pages(object):
          'DeathYear': '0', 'Suffix': '', 'OwnerID': '15390'}
         """
         debug = False
+        if target_genwebid == '':
+            debug = True
         proper_format = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
         chg_to_long_id_file = open(folders_path + '/zzz_xml_file_name_issue.txt','a')
         if not proper_format.match(target_genwebid):
@@ -125,7 +128,7 @@ class build_web_pages(object):
                 chg_to_long_id_file.close()
                 return null_person
             elif len(person_matches) >= 1:
-                if len(person_matches) > 1: chg_to_long_id_file.write('_get_mothers_child line 127 - Multiple matches for rmagic person with target_genwebid = ' + target_genwebid + '\n')
+                #if len(person_matches) > 1: chg_to_long_id_file.write('_get_mothers_child line 127 - Multiple matches for rmagic person with target_genwebid = ' + target_genwebid + '\n')
                 for match_person in person_matches:
                     if debug: chg_to_long_id_file.write('line 129 _get_mothers_child - Multiple matches for rmagic person. Match = ' + match_person['GenWebID'] + '\n')
                     parents = rmagic.fetch_parents_from_ID(\
@@ -140,11 +143,13 @@ class build_web_pages(object):
                     else:
                         mothers_genwebid = parents['Mother']['GenWebID']
                     if mothers_genwebid == targets_mother:
-                        chg_to_long_id_file.write('_get_mothers_child line 142 - Multiple matches resolved - match_person = ' + str(match_person) + '\n')
+                        #chg_to_long_id_file.write('_get_mothers_child line 142 - Multiple matches resolved - match_person = ' + str(match_person) + '\n')
                         chg_to_long_id_file.close()
                         return match_person
 
-        chg_to_long_id_file.write('_get_mothers_child line 146 - Multiple matches not resolved \n')
+        chg_to_long_id_file.write('_get_mothers_child line 146 - Multiple matches not resolved - \n\ttarget_genwebid = ' + target_genwebid)
+        for mother in targets_mother:
+            chg_to_long_id_file.write('\n\ttargets_mother = ' + mother + '\n')
         chg_to_long_id_file.close()
         return null_person
 #--------------------------------------------------_get_mothers_child
@@ -302,6 +307,7 @@ class build_web_pages(object):
             myFile.close()
 
     def _load_dictionary(self, file):
+        #print('_load_dictionary with file = ', file)
         with open(file, "rb") as myFile:
             dict = pickle.load(myFile)
             myFile.close()
@@ -350,6 +356,7 @@ class build_web_pages(object):
                 debug = True
             if long_genwebid == '':
                 continue
+            if debug: print('*** _get_proj_dict_from_xml line 355 - current folder = ', folder, '\n\t people_re.findall(folder) = ', people_re.findall(folder))
             # if there is an error in the following line it is probably caused my either and incomplete xml reference or an incorrect folder name (not a long genwebid)
             person_stuff = people_re.findall(folder)[0] # of the form: ['PersondateMotherdate','Persondate','Motherdate']
             if len(person_stuff) == 0 or len(person_stuff[0]) < 3:
@@ -640,7 +647,7 @@ class build_web_pages(object):
 
             if person[0:2] == 'de':
                 current_letter = person[0:2]
-                debug = True
+                debug = False
             else:
                 current_letter = person[0]
             file_name = folders_path + '/' + current_letter + '.html'
@@ -660,7 +667,7 @@ class build_web_pages(object):
                                 'DeathYear': '', 'Sex':'','GenWebID':'',\
                                 'Given': [''], 'IsPrimary': '', 'FullName': ''}:
                 not_found_file = open(folders_path + '/zzz_PeopleNotFound.txt','a')
-                not_found_file.write('*****build_web_pages line 500 ****** person = ' + person + '  persons_mother = ' + persons_mother + '\n')
+                not_found_file.write('*****build_web_pages line 670 ****** person = ' + person + '  persons_mother = ' + persons_mother + '\n')
                 not_found_file.close()
                 continue
 
@@ -781,7 +788,7 @@ class build_web_pages(object):
         if debug: print('line 608 _generate_person_web - person_stuff = ', person_stuff)
         person = person_stuff[1] #their short genwebid (e.g. AbdillAliceH1923)
 
-        if person == '':
+        if person == 'HughsMarillynM1925CorbettVerneI1892':
             debug = True
 
         if debug: print('\n _generate_person_web line 623: person_dict = ', person_dict)
@@ -1054,7 +1061,7 @@ class build_web_pages(object):
         as person_facts['GenWebID']
         """
         debug = False
-        if person == '':
+        if person == 'HughsMarillynM1925CorbettVerneI1892':
             debug = True
         if person == 'StoriesPersonal0000-':
             return
@@ -1475,9 +1482,9 @@ class build_web_pages(object):
         hourglasshtmlList.append("<head>\n")
         hourglasshtmlList.append('    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />' + "\n")
 
-        given_names = ''
-        for names in person_facts['Given']:
-            given_names = given_names + ' ' + names
+        #given_names = ''  -------------- not used - delete
+        #for names in person_facts['Given']:
+        #    given_names = given_names + ' ' + names
 
         hourglasshtmlList.append('    <title>' + person_facts['FullName'] + '</title>' + "\n")
         hourglasshtmlList.append('    <link href="../css/individual.css" type="text/css" rel="stylesheet" />' + "\n")

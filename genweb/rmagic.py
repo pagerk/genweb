@@ -140,8 +140,8 @@ def fetch_person_from_name(name_table, person_table, name_dict):
    	where these rootsmagic tags are equivalent ; OwnerID = person_ID
     """
 
-    debug = True
-    if name_dict['Surname'] == "":
+    debug = False
+    if name_dict['Surname']+name_dict['Given']+name_dict['Initial']+name_dict['BirthYear'] == "":
         debug = True
     if debug == True:
         fetch_person_from_name_file = open('C:\Family_History\FamilyHistoryWeb\Individual_Web_Pages/zzzRM_fetch_person_from_name.txt','a')
@@ -210,9 +210,9 @@ def fetch_person_from_name(name_table, person_table, name_dict):
                 elif given_num == 1:
                     genweb_id = genweb_id + person['Given'][given_num][0:1]
                 elif given_num == 2:
-                    genweb_id = genweb_id + person['Given'][given_num-1][0:1] + person['Given'][given_num][0:1]
+                    genweb_id = genweb_id + person['Given'][given_num][0:1]
                 elif given_num == 3:
-                    genweb_id = genweb_id + person['Given'][given_num-2][0:1] + person['Given'][given_num-1][0:1] + person['Given'][given_num][0:1]
+                    genweb_id = genweb_id + person['Given'][given_num][0:1]
             genweb_id = genweb_id.strip('.')
 
             if debug == True:
@@ -302,7 +302,7 @@ def fetch_person_from_ID(name_table, person_table, id):
           'FullName': 'Page, Robert Kenneth'}]
     """
     debug = False
-    if id == 'GibbonCharlotte1850':
+    if id == 'AndrewsMartinVB1834':
         debug = True
     for person in name_table:
         if person['OwnerID'] == id and person['IsPrimary'] == '1':

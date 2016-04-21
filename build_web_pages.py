@@ -7,7 +7,7 @@ sys.path.append(os.path.split(__file__)[0])
 
 
 from genweb import build_web_pages
-
+import struct
 
 if __name__ == '__main__':
     build_web_pages.main()

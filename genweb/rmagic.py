@@ -32,6 +32,8 @@ def _load_rmagic(rm_db):
                                     FROM NameTable")
             name_tab = cursor.fetchall()
 
+            print_tables = False
+
             # Process NameTable
             name_dict = {}
             name_table = []
@@ -49,6 +51,7 @@ def _load_rmagic(rm_db):
                     'DeathYear': str(name[8]),
                 }
                 name_table.append(name_dict)
+                if print_tables: print('name_table name_dict = ', name_dict['OwnerID'], ',', name_dict['Surname'], ',', name[2], ',', name_dict['Prefix'], ',', name_dict['Suffix'], ',', name_dict['Nickname'], ',', name_dict['IsPrimary'], ',', name_dict['BirthYear'], ',', name_dict['DeathYear'])
 
             # Process PersonTable
             cursor.execute("SELECT PersonID,Sex,ParentID,\
@@ -64,6 +67,7 @@ def _load_rmagic(rm_db):
                     'SpouseID': str(person[3]),
                 }
                 person_table.append(person_dict)
+                if print_tables: print('person_table person_dict = ', str(person_dict))
 
             # Process ChildTable
             cursor.execute("SELECT ChildID,FamilyID,ChildOrder FROM ChildTable")
@@ -77,6 +81,7 @@ def _load_rmagic(rm_db):
                     'ChildOrder': str(child[2]),
                 }
                 child_table.append(child_dict)
+                if print_tables: print('child_table child_dict = ', str(child_dict))
 
             # Process FamilyTable
             cursor.execute("SELECT FamilyID,FatherID,MotherID,\
@@ -92,6 +97,7 @@ def _load_rmagic(rm_db):
                     'ChildID': str(family[3]),
                 }
                 family_table.append(family_dict)
+                if print_tables: print('family_table family_dict = ', str(family_dict))
 
     roots_magic_db = {
         'NameTable': name_table,
@@ -157,8 +163,8 @@ def fetch_person_from_name(name_table, person_table, name_dict):
     person_matches = []
     #if debug: print('name_table = ', name_table)
     for person in name_table: # only testing their first middle initial, if it exists
-        #if person['Given'][0] == '':
-            #debug = True
+        if person['Surname'] == '':
+            continue
         if len(person['Given']) == 1:
             person['Given'].append('')
         if name_dict['BirthYear'] == '': name_dict['BirthYear'] = '0000'
@@ -302,7 +308,7 @@ def fetch_person_from_ID(name_table, person_table, id):
           'FullName': 'Page, Robert Kenneth'}]
     """
     debug = False
-    if id == 'AndrewsMartinVB1834':
+    if id == '':
         debug = True
     for person in name_table:
         if person['OwnerID'] == id and person['IsPrimary'] == '1':
@@ -427,6 +433,7 @@ def fetch_family_from_ID(person_table, family_table, person_ID):
         if person['PersonID'] == person_ID:
             break
     else:
+        print('rmagic.py - fetch_family_from_ID -  no person in the person_table matches person_ID = ', person_ID)
         parent_ID = ""
         person = {}
     sex = person.get('Sex', male)

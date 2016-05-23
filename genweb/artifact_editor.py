@@ -1,4 +1,4 @@
-Row#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import os
 from tkinter import *
@@ -739,7 +739,7 @@ class Editor(object):
 def main():
     # Get the RootsMagic database info
     rmagicPath = 'C:\\Users\\pager\\Dropbox\\RootsMagic Database\\myfamily.rmgc'
-    #rmagicPath = os.path.expanduser('~/Dropbox/RootsMagic Database/myfamily.rmgc')
+    #rmagicPath = os.path.expanduser('C:\\Users\\pager\\Dropbox\\Apps\\RootsMagic\\myfamily.rmgc')
     editor = Editor(rmagicPath)
     editor.mainloop()
 

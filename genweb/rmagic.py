@@ -32,12 +32,18 @@ def _load_rmagic(rm_db):
                                     FROM NameTable")
             name_tab = cursor.fetchall()
 
+            print_name_table = False
             print_tables = False
 
             # Process NameTable
             name_dict = {}
             name_table = []
+            ownerid_name_table = {}
             for name in name_tab:
+                print_name_table = False
+                print_tables = False
+                if str(name[6]) != '1': continue # if not IsPrimary go to next name
+                FullName = name[1] + ', ' + name[2]
                 given = name[2].split(' ')
                 name_dict = {
                     'OwnerID': str(name[0]),
@@ -49,9 +55,23 @@ def _load_rmagic(rm_db):
                     'IsPrimary': str(name[6]),
                     'BirthYear': str(name[7]),
                     'DeathYear': str(name[8]),
+                    'FullName' : FullName
                 }
                 name_table.append(name_dict)
-                if print_tables: print('name_table name_dict = ', name_dict['OwnerID'], ',', name_dict['Surname'], ',', name[2], ',', name_dict['Prefix'], ',', name_dict['Suffix'], ',', name_dict['Nickname'], ',', name_dict['IsPrimary'], ',', name_dict['BirthYear'], ',', name_dict['DeathYear'])
+                if print_name_table:print('name_dict =', name_dict)
+                if name_dict['FullName'] == '':
+                    print('name_dict =', name_dict)
+                    print_name_table = True
+                if len(name_dict['Surname']) > 2\
+                    and len(name_dict['Given'][0]) > 1: #changed from 2 to 1 20160623
+                    ownerid_name_table[name_dict['OwnerID']] = name_dict
+                    if print_name_table:print('name_dict =', str(name_dict))
+                if print_name_table:
+                    print('name_table name_dict = ', name_dict['OwnerID'], ',', \
+                      name_dict['Surname'], ',', name_dict['Given'], ',', \
+                      name_dict['Prefix'], ',', name_dict['Suffix'], ',', \
+                      name_dict['Nickname'], ',', name_dict['IsPrimary'], ',', \
+                      name_dict['BirthYear'], ',', name_dict['DeathYear'])
 
             # Process PersonTable
             cursor.execute("SELECT PersonID,Sex,ParentID,\
@@ -59,6 +79,7 @@ def _load_rmagic(rm_db):
             person_tab = cursor.fetchall()
             person_dict = {}
             person_table = []
+            person_id_person_table = {}
             for person in person_tab:
                 person_dict = {
                     'PersonID': str(person[0]),
@@ -67,6 +88,7 @@ def _load_rmagic(rm_db):
                     'SpouseID': str(person[3]),
                 }
                 person_table.append(person_dict)
+                person_id_person_table[person_dict['PersonID']] = person_dict
                 if print_tables: print('person_table person_dict = ', str(person_dict))
 
             # Process ChildTable
@@ -89,6 +111,7 @@ def _load_rmagic(rm_db):
             family_tab = cursor.fetchall()
             family_dict = {}
             family_table = []
+            family_id_family_table = {}
             for family in family_tab:
                 family_dict = {
                     'FamilyID': str(family[0]),
@@ -97,6 +120,7 @@ def _load_rmagic(rm_db):
                     'ChildID': str(family[3]),
                 }
                 family_table.append(family_dict)
+                family_id_family_table[family_dict['FamilyID']] = family_dict
                 if print_tables: print('family_table family_dict = ', str(family_dict))
 
     roots_magic_db = {
@@ -104,6 +128,9 @@ def _load_rmagic(rm_db):
         'PersonTable': person_table,
         'ChildTable': child_table,
         'FamilyTable': family_table,
+        'ownerid_name_table': ownerid_name_table,
+        'person_id_person_table': person_id_person_table,
+        'family_id_family_table': family_id_family_table
     }
     return roots_magic_db
 
@@ -116,9 +143,14 @@ def fetch_rm_tables(rm_db):
         'PersonTable':person_table
         'ChildTable':child_table,
         'FamilyTable':family_table
+        'ownerid_name_table': ownerid_name_table,
+        'personid_name_table': personid_name_table,
+        'familyid_table': familyid_table
     }
     where each table is a list of the table rows
     where each row is a dict for that row.
+    each *id*_table is a dictionary of dictionaries where the top level keys
+    are each *id
     """
     cache_path = 'pickle_rm_db.pkl'
     #TODO: Add support for loading the cache
@@ -295,6 +327,77 @@ def fetch_person_from_fuzzy_name(name_table, name_dict, year_error=2):
         _moduleLogger.debug("No person found: %r", name_dict)
     return person_matches
 
+
+def fetch_person_from_ID2(ownerid_name_table, personid_name_table, id): # attempt at rewrite of fetch_person_from_ID
+    """
+    Given a person's PersonID (AKA OwnerID) fetch the NameTable entry for that
+    person.
+    The return is of the form:
+        [{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+          'Suffix': '', 'BirthYear': '1949','Prefix': '',
+          'DeathYear': '0', 'Sex':'male,'long_genwebid':'PageRobertK1949HughsMarillynH1925',
+          'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+          'FullName': 'Page, Robert Kenneth'}]
+    """
+
+    debug = False
+    if name_dict['OwnerID'] == '': debug = True
+
+    name_dict = ownerid_name_table[id]
+    """
+    where name_dict = { 'OwnerID': str(name[0]),
+                        'Surname': name[1],
+                        'Given': given,
+                        'Prefix': name[3],
+                        'Suffix': name[4],
+                        'Nickname': name[5],
+                        'IsPrimary': str(name[6]),
+                        'BirthYear': str(name[7]),
+                        'DeathYear': str(name[8])}
+    """
+
+    person_sex = 'male' if personid_name_table[name_dict['OwnerID']]['Sex'] == '0' else 'female'
+
+    if name_dict['BirthYear'] == '0':
+        birth_year = '0000'
+    elif len(name_dict['BirthYear']) == 3:
+        birth_year = '0' + name_dict['BirthYear']
+    else:
+        birth_year = person['BirthYear']
+
+    genweb_id = name_dict['Surname']
+
+    for given_num in range(len(name_dict['Given'])):
+        if given_num == 0  and len(name_dict['Given'][0]) <= 2:
+            return {}
+        if given_num == 0:
+            genweb_id = genweb_id + name_dict['Given'][0]
+            if debug == True:
+                print('genweb_id1 = ', genweb_id)
+        else:
+            if debug == True:
+                print('given_num = ', given_num)
+            if len(name_dict['Given'][given_num]) > 0:
+                genweb_id = genweb_id + name_dict['Given'][given_num][0]
+            if debug == True:
+                print('genweb_id2 = ', genweb_id)
+
+    genweb_id = genweb_id.strip('.') # this is the short genweb_id
+
+    result = {  'OwnerID': name_dict['OwnerID'],
+                'Surname': name_dict['Surname'],
+                'Given':   name_dict['Given'],
+                'Prefix': name_dict['Prefix'],
+                'Suffix': name_dict['Suffix'],
+                'Nickname':name_dict['Nickname'],
+                'IsPrimary': name_dict['IsPrimary'],
+                'BirthYear': name_dict['BirthYear'],
+                'DeathYear': name_dict['DeathYear'],
+                'Sex'      : person_sex,
+                'FullName': name_dict['Surname'] + ', ' + name_dict['Given'],
+                'GenWebID': genweb_id
+                }
+    return result
 
 def fetch_person_from_ID(name_table, person_table, id):
     """

@@ -568,6 +568,7 @@ class Editor(object):
         artifact_label = artifact_path.rpartition('/')[2]
         artifact_label = artifact_label # delete this line !!!!
         file_name = artifact_path + '/' + artifact_ID + artifact_label + '.xml'
+        parent_path =  os.path.split(artifact_path)
 
         referenced_people = ''
         for person_no in range(self._MAX_PEOPLE_REFERENCED):
@@ -579,12 +580,19 @@ class Editor(object):
                 referenced_people = fully_referenced_person + ';' + referenced_people
         referenced_people = referenced_people.rstrip(';')
 
-
+        date_modified = str(datetime.date.today())
+        # the following 5 lines will save the date of the latest change to an xml file
+        # I will use this to avoid re-creating the xml dictionary files if nothing has changed
+        head_path = os.path.split(artifact_path)
+        file_name_latest_xml_mod = head_path[0] + '/___dictionaries/file_name_latest_xml_mod.dat'
+        with open(file_name_latest_xml_mod,'w') as g:
+            g.write(date_modified)
+            g.close()
 
         if os.path.isfile(file_name) == True:
             file_name = artifact_path + '/' + artifact_ID + artifact_label + '_new.xml'
             print('Need to resolve differences between the file ',file_name,' and its previous version')
-        date_modified = str(datetime.date.today())
+
         try:
             with open(file_name,'w') as f:
                 f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n')

@@ -91,6 +91,10 @@ class build_web_pages(object):
         else:
             name_table_pkl_mod_time = 0
 
+        print('line 94 rmagic_mod_time = ', rmagic_mod_time)
+        print('line 95 name_table_pkl_mod_time = ', name_table_pkl_mod_time)
+        print('line 96 if rmagic_mod_time > name_table_pkl_mod_time then get rmagic tables')
+
         if rmagic_mod_time > name_table_pkl_mod_time:
             for name_table_entry in self._tables['NameTable']:
                 #print('name_table_entry entry = ', str(name_table_entry))
@@ -129,7 +133,9 @@ class build_web_pages(object):
                     'DeathYear'
                     'FullName'
                 """
-                #print('family_dict = ', family_dict)
+                if family_dict['target']['OwnerID'] == '17000':
+                    print('line 137 - family_dict = ', family_dict)
+                    print('line 138 - revised_name_table_entry = ', revised_name_table_entry)
 
                 revised_name_table[revised_name_table_entry['long_genwebid']] = family_dict
             self._save_dictionary(revised_name_table, file_name)
@@ -142,6 +148,7 @@ class build_web_pages(object):
         #----------------------------------------
         # the following lines will load the date of the latest change to any xml file
         # I will use this to avoid re-creating the xml dictionary files if nothing has changed
+        """
         file_name_latest_xml_mod = dictionaries_path + '/file_name_latest_xml_mod.dat'
         if os.path.isfile(file_name_latest_xml_mod):
             xml_mod_time = os.stat(file_name_latest_xml_mod).st_mtime
@@ -149,11 +156,18 @@ class build_web_pages(object):
             xml_mod_time = 1
             f = open(file_name_latest_xml_mod,'w')
             f.close()
+
+        print('line 156 xml_mod_time = ', xml_mod_time)
+
         file_name_latest_pkl_create = dictionaries_path + '/file_name_latest_pkl_create.dat'
         if os.path.isfile(file_name_latest_pkl_create):
             pkl_create_time = os.stat(file_name_latest_pkl_create).st_mtime
         else:
             pkl_create_time = 0
+
+        print('line 165 pkl_create_time = ', pkl_create_time)
+        print('line 166 if pkl_create_time !> xml_mod_time then get_proj_dict_from_xml')
+
         if pkl_create_time > xml_mod_time:
             refresh_get_proj_dict_from_xml = False
         else:
@@ -164,8 +178,10 @@ class build_web_pages(object):
             g = open(file_name_latest_pkl_create,'w')
             g.close()
 
-        generate_table_of_contents = False
-        generate_hourglass = False
+        """
+        refresh_get_proj_dict_from_xml = True
+        generate_table_of_contents = True
+        generate_hourglass = True
         generate_web_pages = True
 
         if refresh_get_proj_dict_from_xml:
@@ -179,9 +195,9 @@ class build_web_pages(object):
         for person in people_ids:
             if person in revised_name_table:
                 families_dict[person] = revised_name_table[person]
-                #print('line 129 families_dict = ', str(families_dict))
+                #print('line 193 families_dict = ', str(families_dict))
             else:
-                print("line 184 - person not in revised_name_table: person = ", str(person))
+                print("line 195 - person not in revised_name_table: person = ", str(person))
         #print('End of list')
         """
         families_dict only contains revised_name_table info for people who have folders
@@ -664,7 +680,34 @@ class build_web_pages(object):
         PageRobertK1949HughsMarillynM1921) this returns the 3 generation family
         (person, parents, spouses, and children
         3g_family =
-        !!! I need to decide the form of the return   {}
+        'tgt_person_facts' =
+            [{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+              'Suffix': '', 'BirthYear': '1949','Prefix': '',
+              'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+              'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+              'FullName': 'Page, Robert Kenneth'}]
+        'tgt_parents' = {
+        	'Father': {'Given': [''], \
+                        'IsPrimary': '1', 'DeathYear': '', 'Prefix': '', \
+                        'BirthYear': '', 'Nickname': '', 'Suffix': '', 'Surname': '', \
+                        'OwnerID': '', 'Sex': '', 'GenWebID': '', 'FullName': ''},\
+
+        	'Mother':{'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                        'Prefix': '', 'BirthYear': '', 'Nickname': '', 'Suffix': '', \
+                        'Surname': '', 'OwnerID': '', 'Sex': '', 'GenWebID': '', \
+                        'FullName': ''}}
+        'spouseList' =
+            [{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+              'Suffix': '', 'BirthYear': '1949','Prefix': '',
+              'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+              'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+              'FullName': 'Page, Robert Kenneth'}]
+        'childList' =
+			  [{'Surname': 'Page', 'OwnerID': '1','Nickname': 'Bob',
+				'Suffix': '', 'BirthYear': '1949','Prefix': '',
+				'DeathYear': '0', 'Sex':'male,'GenWebID':'PageRobertK1949',
+				'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
+				'FullName': 'Page, Robert Kenneth'}]
         """
         debug = False
         if targets_long_genwebid == '':
@@ -678,9 +721,24 @@ class build_web_pages(object):
         # this will be used to separate the target person's
         # id from the mother's id
         # tgt_person_stuff of the form: ['PersondateMotherdate','Persondate','Motherdate']
+        try:
+            tgt_person_stuff = people_re.findall(targets_long_genwebid)#[0]
+        except:
+            print('\n _get_3g_family - line 695 targets_long_genwebid = ', \
+                                                            targets_long_genwebid)
+            print(" couldn't set tgt_person_stuff = people_re.findall(targets_long_genwebid)[0]")
+            three_gen_family['tgt_parents'] = {'Father': {'Given': [''], \
+                'IsPrimary': '1', 'DeathYear': '', 'Prefix': '', \
+                'BirthYear': '', 'Nickname': '', 'Suffix': '', 'Surname': '', \
+                'OwnerID': '', 'Sex': '', 'GenWebID': '', 'FullName': ''},\
+                'Mother':{'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                'Prefix': '', 'BirthYear': '', 'Nickname': '', 'Suffix': '', \
+                'Surname': '', 'OwnerID': '', 'Sex': '', 'GenWebID': '', \
+                'FullName': ''}}
+            return three_gen_family
+
         tgt_person_stuff = people_re.findall(targets_long_genwebid)[0]
-        if debug: print('\n _get_3g_family - line 168 tgt_person_stuff = ', \
-                                                            tgt_person_stuff)
+
         tgt_person = tgt_person_stuff[1]
         tgt_persons_mother = tgt_person_stuff[2]
         if tgt_persons_mother == '-':
@@ -843,7 +901,10 @@ class build_web_pages(object):
             myFile.close()
 
     def _load_dictionary(self, file_name):
-        #print('_load_dictionary with file_name = ', file_name)
+        if not os.path.isfile(file_name):
+            print('_load_dictionary with file_name= ', file_name, '  not found')
+            dict = {'person_info':		[],'artifacts_info': {}}
+            return dict
         with open(file_name, "rb") as myFile:
             dictionary = pickle.load(myFile)
             myFile.close()
@@ -1359,336 +1420,11 @@ class build_web_pages(object):
         return item[-4:]
 
 #--------------------------------------------------
-    def _generate_person_web(self, genwebid, person_dict, folders_path):
-
-        """
-        This will create an artifacts html file for each person in the
-        Individual_Web_Pages folder in that person's folder. The source of the
-        information is my rootsmagic database. Note that "person" is the same
-        as person_facts['GenWebID'], e.g. 'IngramJamieL1971SpackmanJeannine1947'
-        These two short genwebids are derived the the long genwebid
-        (e.g. 'IngramJamieL1971SpackmanJeannine1947')that is passed.
-
-        person_dict =
-        {'person_info':		[persons_id,mothers_id],
-         'artifacts_info':
-                            {artifact_id: {'type':'picture', 'title':'title txt here', ...
-		                    }
-                            {artifact_id: {'type':'picture', 'title':'title txt here',...
-                            }
-	                         ...
-        }
-        """
-
-        debug = False
-
-        # this will be used to separate the genwebid (target_person) into the persons_id and the mothers_id
-        people_re = re.compile("(([A-Za-z']+[A-Z][a-z]*[0-9]{4})([-]|[A-Za-z']+[A-Z][a-z]*[0-9]{4}))")
-
-        # this will be used to separate the persons id from the mothers id
-        person_stuff = people_re.findall(genwebid)[0] # of the form: [('long_genwebid', 'tgt_short_genwebid', 'mother_short_genwebid')] (e.g. [('AbdillAliceH1923SmithAgnessF1900', 'AbdillAliceH1923', 'SmithAgnessF1900')])
-
-        if debug: print('line 608 _generate_person_web - person_stuff = ', person_stuff)
-        person = person_stuff[1] #their short genwebid (e.g. AbdillAliceH1923)
-
-        if person == '': # person is short genwebid
-            debug = True
-
-        if debug: print('\n _generate_person_web line 623: person_dict = ', person_dict)
-
-        person_id_dict = self._separate_names(person)
-        """person_id_dict is a dictionary with the following keys
-            'BirthYear'
-            'Surname'
-            'Given'
-            'Initial'
-            'FullName = person['Surname'] + ', ' + person['Given'] + ' ' + person['Initial']'
-        """
-        persons_mother = person_stuff[2]
-        if persons_mother == '-':
-            persons_mother = ''
-            person_facts = rmagic.fetch_person_from_name\
-                                (self._tables['NameTable'], \
-                                 self._tables['PersonTable'], person_id_dict)[0]
-            """
-            the return is of the form:
-                [{'Surname': 'Page', 'OwnerID': '1', 'Nickname': 'Bob',
-                  'Suffix': '', 'BirthYear': '1949', 'Prefix': '',
-                  'DeathYear': '0', 'Sex':'male, 'GenWebID':'PageRobertK1949',
-                  'Given': ['Robert', 'Kenneth'], 'IsPrimary': '1',
-                  'FullName': 'Page, Robert Kenneth'}]
-            """
-        else:
-            person_facts = self._get_mothers_child(person, persons_mother, folders_path)
-            """
-            Given the persons short genwebid (person, e.g. PageRobertK1949) and
-            the person's mother's short genwebid (persons_mother, e.g., HughsM1925),
-            returns the person_facts for for that mother/child pair.
-            (This differentiates two people with the same name and birth year.)
-            person_facts =
-            {'GenWebID': 'AbdillAliceH1923', 'Nickname': '', 'BirthYear': '1923',
-             'IsPrimary': '1', 'Given': ['Alice', 'H'], 'Surname': 'Abdill',
-             'Sex': 'female', 'Prefix': '', 'FullName': 'Abdill, Alice H',
-             'DeathYear': '0', 'Suffix': '', 'OwnerID': '15390'}
-            """
-        if debug:
-            print('line 641 _generate_person_web - person = ', person)
-            print('line 642 _generate_person_web - person_facts = ', person_facts)
-
-        if person == 'StoriesPersonal0000':
-            artifact_ids = sorted(person_dict['artifacts_info'].keys(), key=self._last)
-        else:
-            artifact_ids = sorted(person_dict['artifacts_info'].keys())
-            if debug:
-                print('line 651 _generate_person_web - artifact_ids = ', artifact_ids)
-                print('line 652 _generate_person_web - person_dict[artifacts_info] = ', \
-                                                person_dict['artifacts_info'])
-
-        if person_dict['artifacts_info'] == {}:
-            people_excluded_file = open(folders_path + '/zzz_PeopleExcluded.txt', 'a')
-            people_excluded_file.write('\n No artifacts found: In _generate_person_web, genwebid = ' \
-             + genwebid + '  was not found in the rootsmagic datbase. It was searched for with the following information person_id_dict[Surname] = ' \
-             + person_id_dict['Surname'] + '  person_id_dict[Given] = ' \
-             + person_id_dict['Given'] + '  person_id_dict[Initial] = ' \
-             + person_id_dict['Initial'] + '  person_id_dict[BirthYear] = '\
-             + person_id_dict['BirthYear'] + '\n')
-
-            people_excluded_file.close()
-            return
-
-        #print('genwebid = ', genwebid, '----- person_facts = ', person_facts)
-        folder_path = folders_path + '/' + genwebid
-        person_folder_path = folders_path + '/' + genwebid
-        #print('person_folder_path = ', person_folder_path)
-
-        if not os.path.isdir(person_folder_path):
-            print('*****_generate_person_web line 670 ' + person_folder_path + '**** created ****')
-            os.makedirs(person_folder_path)
-
-        index_html_file = open(person_folder_path + '/index.html', 'w')
-        index_html_file.write('<!DOCTYPE html ')
-        index_html_file.write('<html>\n')
-        index_html_file.write('\t<head>\n')
-        index_html_file.write('\t\t<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />\n')
-        index_html_file.write('\t\t<title>Family History</title>\n')
-        index_html_file.write('\t\t<script type="text/javascript" src="../scripts/ImagePatch.js"></script>\n')
-        index_html_file.write('\t\t<link href="../css/individual.css" type="text/css" rel="stylesheet" />\n')
-        index_html_file.write('\t\t<style type="text/css">\n')
-        index_html_file.write('\t\t/*<![CDATA[*/\n')
-        index_html_file.write('\t\tdiv.ReturnToTop {text-align: right}\n')
-        index_html_file.write('\t\t/*]]>*/\n')
-        index_html_file.write('\t\t</style>\n')
-        index_html_file.write('\t</head>\n')
-        index_html_file.write('\t<body background="../images/back.gif" onload="patchUpImages()">\n')
-
-        index_html_file.write('\t\t<script>\n')
-        index_html_file.write('\t\tfunction playPauseVideo(identifier) {\n')
-        index_html_file.write('\t\t\tvar myVideo = document.getElementById(identifier);\n')
-        index_html_file.write('\t\t\tif (myVideo.paused)\n')
-        index_html_file.write('\t\t\t\tmyVideo.play();\n')
-        index_html_file.write('\t\t\telse\n')
-        index_html_file.write('\t\t\t\tmyVideo.pause();\n')
-        index_html_file.write('\t\t}\n')
-        index_html_file.write('\t\tfunction setWidth(identifier, size) {\n')
-        index_html_file.write('\t\t\tvar myVideo = document.getElementById(identifier);\n')
-        index_html_file.write('\t\t\tmyVideo.width = size;\n')
-        index_html_file.write('\t\t}\n')
-        index_html_file.write('\t\t</script>\n')
-
-        if person == 'StoriesPersonal0000':
-            index_html_file.write('\t\t<h1><a name="Top"></a>Personal Stories from our Ancestors</h1>\n')
-            index_html_file.write('\t\t\t\t<a href= "../../index.html"><img src="../images/Home.jpg"></a>\n')
-        else:
-
-            nickname = ''
-            if len(person_facts['Nickname']) > 1: nickname = ' "'+ person_facts['Nickname'] + '" '
-
-            birth_year = person_facts['BirthYear'] if len(person_facts['BirthYear']) > 2 else '?'
-            death_year = person_facts['DeathYear'] if len(person_facts['DeathYear']) > 2 else '?'
-            index_html_file.write('\t\t<h1><a name="Top"></a>' + person_facts["FullName"] + nickname + ' - ' + birth_year + ' - ' + death_year + '</h1>\n')
-            index_html_file.write('\t\t<a href= "HourGlass.html"><img src="../images/family.bmp"></a>\n')
-
-        if person_dict['artifacts_info'] == {}:
-            index_html_file.write('\t</body>\n')
-            index_html_file.write('</html>\n')
-            index_html_file.close()
-            return
-
-        artifacts_info = person_dict['artifacts_info']
-        if debug: print('_generate_person_web line 709 artifacts = ', artifacts_info)
-
-        index_tbl_lines = []
-        index_tbl_lines.append('\t\t<!-- Index table -->\n')
-        index_tbl_lines.append('\t\t<table align="center" border cellpadding="4" cellspacing="4" cols="3">\n')
-        index_tbl_lines.append('\t\t\t<col width="33%">\n')
-        index_tbl_lines.append('\t\t\t<col width="33%">\n')
-        index_tbl_lines.append('\t\t\t<col width="33%">\n')
-
-        artifacts_tbl_lines = []
-        artifacts_tbl_lines.append('\t\t<!-- Beginning of Content -->\n')
-        artifacts_tbl_lines.append('\t\t<!-- artifacts -->\n')
-        artifacts_tbl_lines.append('\t\t<p><em><strong>To identify people in a photograph:</em></strong></p>')
-        artifacts_tbl_lines.append('\t\t<ul>')
-        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Click the smiley face next to the photo (the smiley face will change to a black checkmark).</span></li>')
-        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Center the cross shaped cursor on the photograph and select the person</span></li>')
-        artifacts_tbl_lines.append('\t\t<li style="margin-left:2em;font-size: 10pt">a dialogue box will open requesting the name of the person</li>')
-        artifacts_tbl_lines.append('\t\t<li style="margin-left:2em;font-size: 10pt">continue selecting and naming people until you are done</li>')
-        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Select the checkmark</span></li>')
-        artifacts_tbl_lines.append('\t\t<li style="margin-left:2em;font-size: 10pt">your default email program will open with an email ready for you to send. </li>')
-        artifacts_tbl_lines.append('\t\t<li><span style="font-size: 10pt">Send the email.</span></li>')
-        artifacts_tbl_lines.append('\t\t</ul>')
-        debug = False
-        index_tbl_col = 1
-        for artifact in artifact_ids:
-            if debug: print('_generate_person_web line 734 artifact = ', artifact)
-            artifact_genwebid = artifact.lstrip('+0123456789') #this is the long genwebid
-            artifact_folder_path = folders_path + '/' + artifact_genwebid
-            # Generate index table
-            if index_tbl_col == 1:
-                index_tbl_lines.append('\t\t\t<tr>\n')
-
-            index_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
-
-            if debug:
-                print('***************_generate_person_web line 744: artifact = ', artifact)
-                print('artifacts[artifact] = ', artifacts_info[artifact])
-                print('sorted(artifacts_info[artifact].keys()) = ', sorted(artifacts_info[artifact].keys()))
-                print('genwebid = ', genwebid, '   person_dict = ', person_dict)
-            index_tbl_lines.append('\t\t\t\t\t<p><a href="#' + os.path.basename(person_dict['artifacts_info'][artifact]['file']) + '">' + person_dict['artifacts_info'][artifact]['title'] + '</a></p>\n')
-            index_tbl_lines.append('\t\t\t\t</td>\n')
-
-            if index_tbl_col == 3:
-                index_tbl_lines.append('\t\t\t</tr>\n')
-
-            index_tbl_col = index_tbl_col + 1 if index_tbl_col < 3 else 1
-
-
-            # Generate artifacts table
-            if person_dict['artifacts_info'][artifact]['type'] == 'picture':
-                artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict['artifacts_info'][artifact]['file']) + '"/>\n')
-                artifacts_tbl_lines.append('\t\t<table WIDTH="600" Align="CENTER" NOBORDER COLS="2">\n')
-                artifacts_tbl_lines.append('\t\t\t<tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                artifacts_tbl_lines.append('\t\t\t\t<table Align=CENTER BORDER CELLPADDING="4" CELLSPACING="4" COLS="1">\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<H2>' + person_dict['artifacts_info'][artifact]['title'] + '</H2>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                if not os.path.isfile(artifact_folder_path + '/' + artifact + '.jpg') and genwebid in artifact: # if  image doesn't exist, note it to be fixed
-                    pic_issue_file = open(folders_path + '/zzz_Artifact_picture_issue.txt', 'a')
-                    pic_issue_file.write('*****build_web_pages picture Not Found: artifact = ' + artifact + ' for ' + genwebid + '\n')
-                    pic_issue_file.close()
-                artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../' + artifact_genwebid + '/' + artifact + '.jpg' + '" target="Resource Window">\n')
-                if os.path.isfile(artifact_folder_path + '/+' + artifact + '.jpg'): # if a hi res image exists, insert a link to it
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/+' + artifact + '.jpg' + '" target="Resource Window">\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<img src="../images/zoom.jpg' + '" target="Resource Window">\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t</a>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t<tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                if 'caption' in person_dict['artifacts_info'][artifact]:
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<p>' + person_dict['artifacts_info'][artifact]["caption"] + '</p>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
-                else:
-                    f = open(folders_path + '/zzz_Artifact_xml_issue.txt', 'a')
-                    f.write('*****_generate_person_web caption Not Found in person_dict[artifacts_info][artifact] = ' + person_dict['artifacts_info'][artifact] + '\n')
-                    f.close()
-                artifacts_tbl_lines.append('\t\t\t\t\t\t</td>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t</tr>\n')
-                artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
-                artifacts_tbl_lines.append('\t\t\t\t</td>\n')
-                artifacts_tbl_lines.append('\t\t\t</tr>\n')
-                artifacts_tbl_lines.append('\t\t</table>\n')
-                artifacts_tbl_lines.append('\t\t\n')
-                artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
-                artifacts_tbl_lines.append('\t\t\n')
-
-
-
-
-
-            proper_format = re.compile("[+]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][A-Za-z']+[A-Z][a-z]*[0-9][0-9][0-9][0-9]")
-            if person_dict['artifacts_info'][artifact]['type'] == 'inline':
-                if debug: print('_generate_person_web line 806: Now processing ' + artifact + '.src')
-                if os.path.isfile(artifact_folder_path + '/' + artifact + '.src') and proper_format.match(artifact): # if a src exists, insert it - continued
-                    artifacts_tbl_lines.append('\t\t<a name="' + os.path.basename(person_dict['artifacts_info'][artifact]['file']) + '"/>\n')
-                    artifacts_tbl_lines.append('\t\t<H2  style="text-align:center;margin-left:auto;margin-right:auto;">' + person_dict['artifacts_info'][artifact]['title'] + '</H2>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t<td align="center" valign=top>\n')
-                    artifacts_tbl_lines.append('\t\t\n')
-                    artifact_source = open(artifact_folder_path + '/' + artifact + '.src', 'r')
-                    for line in artifact_source:
-                        artifacts_tbl_lines.append(line)
-                    artifact_source.close()
-                    artifacts_tbl_lines.append('\t\t\n')
-                    artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
-                    artifacts_tbl_lines.append('\t\t\n')
-                else:
-                    artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt', 'a')
-                    artifact_issue.write('*****build_web_pages line 756: ' + artifact_folder_path + '/' + artifact + '.src file Not Found\n')
-                    artifact_issue.write('*****build_web_pages line 767: person_dict[artifacts_info][artifact][file] = ' + person_dict['artifacts_info'][artifact]['file'] +'\n')
-                    artifact_issue.write('*****build_web_pages line 758: person_dict[artifacts_info][artifact][title] = ' + artifact +'\n')
-                    artifact_issue.close()
-                    if not proper_format.match(artifact):
-                        src_file_name_issue_file = open(folders_path + '/zzz_src_file_name_issue.txt', 'a')
-                        src_file_name_issue_file.write('*****_generate_person_web - inline: file name ' + artifact + '.src' + file_name + ' does not have the proper data format\n')
-                        src_file_name_issue_file.close()
-                    continue
-
-            if person_dict['artifacts_info'][artifact]['type'] == 'href':
-                if debug: print('_generate_person_web line 834: person_dict[artifacts_info][' + artifact + '] = ', person_dict['artifacts_info'][artifact])
-                html_path = artifact_folder_path + '/' + person_dict['artifacts_info'][artifact]['folder'] + '/' + person_dict['artifacts_info'][artifact]['file']
-                if debug: print('_generate_person_web line 836: Now processing href = ', html_path)
-                if os.path.isfile(artifact_folder_path + '/' \
-                 + person_dict['artifacts_info'][artifact]['folder'] + '/' \
-                 + person_dict['artifacts_info'][artifact]['file']):
-                 # if an html exists, reference it - continued
-                    artifacts_tbl_lines.append('\t\t<a name="' + person_dict['artifacts_info'][artifact]['file'] + '"/>\n')
-                    artifacts_tbl_lines.append('\t\t<table WIDTH="600" Align="CENTER" NOBORDER COLS="1">\n')
-                    artifacts_tbl_lines.append('\t\t\t<tr>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t<table Align=CENTER BORDER CELLPADDING="4" CELLSPACING="4" COLS="1">\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t<tr>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t<td ALIGN="CENTER" VALIGN="TOP">\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t<H2>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t\t\t<a href="../' + artifact_genwebid + '/' + person_dict['artifacts_info'][artifact]['folder'] + '/' + person_dict['artifacts_info'][artifact]['file'] + '" target="_blank"><H2>' + person_dict['artifacts_info'][artifact]['title'] + '</H2></a>\n<p><a href="mailto:pagerk@gmail.com?subject=' + artifact + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: center; margin-left: auto; margin-right: auto" height="20"></a>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t\t</td>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t\t</tr>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t\t</table>\n')
-                    artifacts_tbl_lines.append('\t\t\t\t</td>\n')
-                    artifacts_tbl_lines.append('\t\t\t</tr>\n')
-                    artifacts_tbl_lines.append('\t\t</table>\n')
-                    artifacts_tbl_lines.append('\t\t\n')
-                    artifacts_tbl_lines.append('\t\t<div class="ReturnToTop"><a href="#Top"><img src="../images/UP_DEF.GIF" border=0 /></a></div>\n')
-                    artifacts_tbl_lines.append('\t\t\n')
-                else:
-                    artifact_issue = open(folders_path + '/zzz_Artifact_xml_issue.txt', 'a')
-                    artifact_issue.write('*****build_web_pages line 793: href file Not Found\n')
-                    artifact_issue.write('*****build_web_pages line 794:' + artifact_folder_path + '/' + person_dict['artifacts_info'][artifact]['folder'] + '/' + person_dict['artifacts_info'][artifact]['file'] +'\n')
-                    artifact_issue.close()
-                    pass
-
-            pass
-
-        index_tbl_lines.append('\t\t</table>\n')
-        for line in index_tbl_lines:
-            index_html_file.write(line)
-
-        artifacts_tbl_lines.append('\t</body>\n')
-        artifacts_tbl_lines.append('</html>\n')
-
-        for line in artifacts_tbl_lines:
-            index_html_file.write(line)
-        index_html_file.close()
-        pass
-
-        return      # return from _generate_person_web
-#-------------------------------------------------- end of _generate_person_web
 
     def _generate_person_web2(self, family_dict, persons_xml_dict, folders_path):
         """
+        This is the new version!
+
         This will create an artifacts html file for each person in the
         Individual_Web_Pages folder in that person's folder. The source of the
         information is my rootsmagic database.
@@ -1729,8 +1465,6 @@ class build_web_pages(object):
 
         debug = False
 
-        if debug: print('\n _generate_person_web line 623: persons_xml_dict = ', persons_xml_dict)
-
         person_facts = family_dict['target']
         """
             where the keys for person_facts are:
@@ -1747,6 +1481,10 @@ class build_web_pages(object):
         """
 
         long_genwebid = person_facts['long_genwebid']
+
+        if long_genwebid == 'PittsGlenF1958BaileyColleen0000':
+            debug = True
+            print('\n _generate_person_web line 623: persons_xml_dict = ', persons_xml_dict)
 
         if long_genwebid == 'StoriesPersonal0000-':
             artifact_ids = sorted(persons_xml_dict['artifacts_info'].keys(), key=self._last)
@@ -1984,32 +1722,59 @@ class build_web_pages(object):
         return      # return from _generate_person_web
 #-------------------------------------------------- end of _generate_person_web
 
-    def _generate_all_hourglass_webs(self, person, folders_path):
+
+
+    def _generate_all_hourglass_webs(self, family_dict, folders_path):
         """
-        person is the long_genwebid (PersondateMotherdate)
+        This is the new one! changing from person to family_dict
+
+         family_dict =
+           'target: name_table_entry for target
+           'parents':
+             {'mother: name_table_entry for mother,
+              'father: name_table_entry for father}
+           'spouses' : [{name_table_entry for spouse1},...]
+           'children' : [{name_table_entry for child1},...]
+         where each name_table entry will also have key: 'long_genwebid'
+         and the appropriate value.
+         The key for each target is their long_genwebid
+
+        where the keys for an individual are:
+            'OwnerID'
+            'Surname'
+            'Given' (a list of the given names)
+            'Prefix'
+            'Suffix'
+            'Nickname'
+            'IsPrimary'
+            'BirthYear'
+            'DeathYear'
+            'FullName'
+
         This will create an hourglass html file for each person in the
         Individual_Web_Pages folder in that person's folder. The source of the
         information is my rootsmagic database. Note that "person" is the same
         as person_facts['GenWebID']
         """
         debug = False
-        if person == '':
+        long_genwebid = family_dict['target']['long_genwebid']
+
+        if long_genwebid == '':
             debug = True
-        if person == 'StoriesPersonal0000-':
+
+        if debug == True: print('line 2599 family_dict = ', family_dict)
+
+        if long_genwebid == '' or long_genwebid == 'StoriesPersonal0000-':
             return
         short_genwebid_re = re.compile("[A-Za-z']+[A-Z][a-z]*[0-9]{4}")
-        long_genwebid_re = re.compile("(([A-Za-z']+[A-Z][a-z]*[0-9]{4})([-]|[A-Za-z']+[A-Z][a-z]*[0-9]{4}))")
-        three_gen_family = self._get_3g_family(person, folders_path)
-        person_facts = three_gen_family['tgt_person_facts']
-        if not person_facts['GenWebID'] in person:
-            print('*********  Error in _generate_all_hourglass_webs line 1181 person = ', person)
-            print('\t\t person_facts = ', str(person_facts))
-            return
-        long_genwebid = person
-        person = person_facts['GenWebID'] # this is the short genwebid
-        if three_gen_family['tgt_parents']['Mother']['GenWebID'] != '':
-            persons_mother = three_gen_family['tgt_parents']['Mother']['GenWebID']
+        person_facts = family_dict['target']
+
+        if 'GenWebID' in family_dict['parents']['mother']:
+            persons_mother = family_dict['parents']['mother']['GenWebID']
         else:
+            persons_mother = '-'
+
+        if persons_mother == '':
             persons_mother = '-'
 
         hourglass_table = {}
@@ -2048,7 +1813,7 @@ class build_web_pages(object):
                 hourglass_table[key] = \
                 '    <td align="center "></td><!--' + key + '-->\n'
 
-        if len(person_facts['GenWebID']) == 0: # if person doesn't exist, return
+        if 'GenWebID' not in person_facts: # if person doesn't exist, return
             f = open(folders_path + '/zzz_PeopleNotFound.txt', 'a')
             f.write('*****build_web_pages hourglass table row #1 ****** long_genwebid = \
                         ' + long_genwebid + '\n')
@@ -2056,11 +1821,11 @@ class build_web_pages(object):
             return
         else:
             # c5r4 target person picture
-            if os.path.isfile(folders_path + '/' + person + persons_mother \
-                                + '/' +  person + persons_mother + '.jpg'):
+            if os.path.isfile(folders_path + '/' + long_genwebid \
+                                + '/' +  long_genwebid + '.jpg'):
                 hourglass_table['c5r4'] = \
-                '    <td align="center "><img src="../' + person + persons_mother + '/' \
-                    + person + persons_mother + '.jpg" height="75"></td><!--c5r4-->\n'
+                '    <td align="center "><img src="../' + long_genwebid + '/' \
+                    + long_genwebid + '.jpg" height="75"></td><!--c5r4-->\n'
             else:
                 hourglass_table['c5r4'] = \
                 '    <td align="center "><img src="../images/silhouette.jpg" \
@@ -2071,8 +1836,8 @@ class build_web_pages(object):
             '    <td align="center "><a href=index.html><p>' + \
                 person_facts["FullName"] + '</p></a></td><!--c5r5-->\n'
 
-        #add parents (three_gen_family['tgt_parents'])
-                    #Build father - possibilities are that:
+        #add parents (family_dict['parents'])
+        #            Build father - possibilities are that:
         #                    - there is no father's name in the person's entry
         #                       - father's position empty and no link
         #                    - there is a father's name in the person's entry
@@ -2085,10 +1850,6 @@ class build_web_pages(object):
         # - if I have the person's name, use it
         # - if there is a person_id for the person, use it
         # - if neither, don't use maroon
-
-        # sorted(three_gen_family.keys()) = \
-        #   ['childList', 'spouseList', 'tgt_fathers_parents', \
-        #   'tgt_mothers_parents', 'tgt_parents', 'tgt_person_facts']
 
         # preload the silhouette in case tgt parents have no photo
         hourglass_table['c1r2'] = \
@@ -2119,66 +1880,103 @@ class build_web_pages(object):
         '    <td align="center " bgcolor="maroon "></td><!--c3r5-->\n'
 
         debug = False
+        if long_genwebid == '':
+            debug = True
         if person_facts['OwnerID'] == '':
             debug = True
 
         if debug:
-            print('_generate_all_hourglass_webs line 1185 - person = ', person)
-            print('********* three_gen_family[tgt_parents] = ', \
-                                three_gen_family['tgt_parents'])
-            print('********* len(three_gen_family[tgt_parents]) = ', \
-                                len(three_gen_family['tgt_parents']))
-            print('********* three_gen_family = ', three_gen_family)
+            print('_generate_all_hourglass_webs line 1185 - long_genwebid = ', long_genwebid)
+            print('********* person_facts = ', person_facts)
+            print('********* family_dict[parents] = ', \
+                                family_dict['parents'])
+            print('********* len(family_dict[parents]) = ', \
+                                len(family_dict['parents']))
+#Father
+        if 'OwnerID' in family_dict['parents']['father']:
+            tgt_fathers_Owner_ID = family_dict['parents']['father']['OwnerID']
+            tgt_fathers_parents = rmagic.fetch_parents_from_ID(\
+                                                self._tables['PersonTable'],\
+                                                self._tables['NameTable'],\
+                                                self._tables['FamilyTable'],\
+                                                tgt_fathers_Owner_ID)
+        else:
+            fathers_mother_genwebid = '-'
+            father = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                        'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                        'Suffix': '', 'Surname': '', 'OwnerID': '',
+                        'Sex': '', 'GenWebID': '', 'FullName': ''}
+            mother = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                        'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                        'Suffix': '', 'Surname': '', 'OwnerID': '',
+                        'Sex': '', 'GenWebID': '', 'FullName': ''}
+            tgt_fathers_parents = {'Father': father, 'Mother': mother}
+        """
+
+        father = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                    'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                    'Suffix': '', 'Surname': '', 'OwnerID': '',
+                    'Sex': '', 'GenWebID': '', 'FullName': ''}
+        mother = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                    'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                    'Suffix': '', 'Surname': '', 'OwnerID': '',
+                    'Sex': '', 'GenWebID': '', 'FullName': ''}
+
+        tgt_fathers_parents = {'Father': father, 'Mother': mother}
+        """
+        if debug:
+            print('_generate_all_hourglass_webs line 2789 - long_genwebid = ', long_genwebid)
+            print('********* tgt_fathers_parents = ', tgt_fathers_parents)
 
         fathers_mother_genwebid = '-'
-        if three_gen_family['tgt_parents']['Father']['GenWebID'] == '':
+        if 'GenWebID' not in family_dict['parents']['father'] == '':
             fathers_mother_genwebid = '-'
-        elif three_gen_family['tgt_fathers_parents']['Father']['GenWebID'] != '':
+        elif tgt_fathers_parents['Father']['GenWebID'] != '':
             fathers_mother_genwebid = \
-                three_gen_family['tgt_fathers_parents']['Mother']['GenWebID']
+                tgt_fathers_parents['Mother']['GenWebID']
 
         # handle the case where the fathers_mother_genwebid name is incomplete
         if fathers_mother_genwebid == '' or \
             (not short_genwebid_re.match(fathers_mother_genwebid)):
             fathers_mother_genwebid = '-'
 
-        if three_gen_family['tgt_parents']['Father']['FullName'] != '':  # father exists
+        if 'GenWebID' in family_dict['parents']['father']:  # father exists
             # c1r2 father picture
-            if os.path.isfile(folders_path + '/' + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+            if os.path.isfile(folders_path + '/' + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid \
-                                + '/' + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+                                + '/' + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid + '.jpg'):
                 hourglass_table['c1r2'] = '    <td align="center "><img src="../' \
-                                        + three_gen_family['tgt_parents']['Father']["GenWebID"] \
+                                        + family_dict['parents']['father']["GenWebID"] \
                                         + fathers_mother_genwebid + '/' \
-                                        + three_gen_family['tgt_parents']['Father']["GenWebID"] \
+                                        + family_dict['parents']['father']["GenWebID"] \
                                         + fathers_mother_genwebid \
                                         + '.jpg" height="75"></td><!--c1r2-->\n'
             else:
-                if debug: print(folders_path + '/' + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+                if debug: print(folders_path + '/' + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid \
-                                + '/' + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+                                + '/' + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid + '.jpg')
                 hourglass_table['c1r2'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r2-->\n'
 
 
             # c1r3 target person name and link
             # was: if os.path.isdir(folders_path + "/" + three_gen_family['tgt_parents']['Father']["GenWebID"]): --- I don't want a link unless the index.html file exists
-            if os.path.isfile(folders_path + "/" + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+            if os.path.isfile(folders_path + "/" + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid + "/index.html"):
                 hourglass_table['c1r3'] = '    <td align="center "><a href=../' \
-                        + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+                        + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid + '/index.html><p>' \
-                        + three_gen_family['tgt_parents']['Father']['FullName'] + '</p></a></td><!--c1r3-->\n'
+                        + family_dict['parents']['father']['FullName'] + '</p></a></td><!--c1r3-->\n'
             else:
                 hourglass_table['c1r3'] = '    <td align="center "><p>' \
-                        + three_gen_family['tgt_parents']['Father']['FullName'] + '</p></td><!--c1r3-->\n'
+                        + family_dict['parents']['father']['FullName'] + '</p></td><!--c1r3-->\n'
 
             # c2r3 add arrow to select father as new target
-            if os.path.isdir(folders_path + "/" + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+            if os.path.isdir(folders_path + "/" + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid):
                 hourglass_table['c2r3'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
-                                        + three_gen_family['tgt_parents']['Father']['GenWebID'] \
+                                        + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid \
                                         + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r3-->\n'
             else:
@@ -2200,49 +1998,81 @@ class build_web_pages(object):
             pass # don't add any content if father doesn't exist
 
         if debug:
-            print('_generate_all_hourglass_webs line 1255 - person = ', person)
-            print('********* three_gen_family[tgt_parents] = ', three_gen_family['tgt_parents'])
-            print('********* len(three_gen_family[tgt_parents]) = ', len(three_gen_family['tgt_parents']))
-            print('********* three_gen_family = ', three_gen_family)
+            print('_generate_all_hourglass_webs line 1255 - long_genwebid= ', long_genwebid)
+            print('********* family_dict[parents] = ', family_dict['parents'])
+            print('********* len(family_dict[parents]) = ', len(family_dict['parents']))
+            print('********* three_gen_family = ', family_dict)
+# Mother
+        if 'OwnerID' in family_dict['parents']['mother']:
+            tgt_mothers_Owner_ID = family_dict['parents']['mother']['OwnerID']
+            tgt_mothers_parents = rmagic.fetch_parents_from_ID(\
+                                    self._tables['PersonTable'],\
+                                    self._tables['NameTable'],\
+                                    self._tables['FamilyTable'],\
+                                    tgt_mothers_Owner_ID)
+        else:
+            mothers_mother_genwebid = '-'
+            father = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                        'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                        'Suffix': '', 'Surname': '', 'OwnerID': '',
+                        'Sex': '', 'GenWebID': '', 'FullName': ''}
+            mother = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                        'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                        'Suffix': '', 'Surname': '', 'OwnerID': '',
+                        'Sex': '', 'GenWebID': '', 'FullName': ''}
+            tgt_fathers_parents = {'Father': father, 'Mother': mother}
+        """
+
+        father = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                    'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                    'Suffix': '', 'Surname': '', 'OwnerID': '',
+                    'Sex': '', 'GenWebID': '', 'FullName': ''}
+        mother = {'Given': [''], 'IsPrimary': '1', 'DeathYear': '', \
+                    'Prefix': '', 'BirthYear': '', 'Nickname': '', \
+                    'Suffix': '', 'Surname': '', 'OwnerID': '',
+                    'Sex': '', 'GenWebID': '', 'FullName': ''}
+
+        tgt_fathers_parents = {'Father': father, 'Mother': mother}
+        """
 
         mothers_mother_genwebid = '-'
-        if three_gen_family['tgt_parents']['Mother']['GenWebID'] == '':
+        if 'GenWebID' not in family_dict['parents']['mother']:
             mothers_mother_genwebid = '-'
-        elif three_gen_family['tgt_mothers_parents']['Mother']['GenWebID'] != '':
-            mothers_mother_genwebid = three_gen_family['tgt_mothers_parents']['Mother']['GenWebID']
+        elif 'GenWebID' in tgt_mothers_parents['Mother']:
+            mothers_mother_genwebid = tgt_mothers_parents['Mother']['GenWebID']
 
         # handle the case where the mothers_mother_genwebid name is incomplete
         if mothers_mother_genwebid == '' or (not short_genwebid_re.match(mothers_mother_genwebid)): mothers_mother_genwebid = '-'
 
-        if three_gen_family['tgt_parents']['Mother']['FullName'] != '':  # mother exists
+        if 'GenWebID' in family_dict['parents']['mother']:  # mother exists
             # c1r6 target person picture
-            if os.path.isfile(folders_path + '/' + three_gen_family['tgt_parents']['Mother']['GenWebID'] \
+            if os.path.isfile(folders_path + '/' + family_dict['parents']['mother']['GenWebID'] \
                                 + mothers_mother_genwebid \
-                                + '/' + three_gen_family['tgt_parents']['Mother']['GenWebID'] + mothers_mother_genwebid + '.jpg'):
+                                + '/' + family_dict['parents']['mother']['GenWebID'] + mothers_mother_genwebid + '.jpg'):
                 hourglass_table['c1r6'] = '    <td align="center "><img src="../' \
-                                        + three_gen_family['tgt_parents']['Mother']["GenWebID"] + mothers_mother_genwebid + '/' \
-                                        + three_gen_family['tgt_parents']['Mother']["GenWebID"] + mothers_mother_genwebid\
+                                        + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid + '/' \
+                                        + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid\
                                         + '.jpg" height="75"></td><!--c1r6-->\n'
             else:
                 hourglass_table['c1r6'] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--c1r6-->\n'
 
             # c1r7 target person name and link
-            #if os.path.isdir(folders_path + "/" + three_gen_family['tgt_parents']['Mother']["GenWebID"]): --- I don't want a link unless the index.html file exists
-            if os.path.isfile(folders_path + "/" + three_gen_family['tgt_parents']['Mother']["GenWebID"] + mothers_mother_genwebid + "/index.html"):
+            #if os.path.isdir(folders_path + "/" + family_dict['parents']'Mother']["GenWebID"]): --- I don't want a link unless the index.html file exists
+            if os.path.isfile(folders_path + "/" + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid + "/index.html"):
                 hourglass_table['c1r7'] = '    <td align="center "><a href=../' \
-                        + three_gen_family['tgt_parents']['Mother']["GenWebID"] + mothers_mother_genwebid + '/index.html><p>' \
-                        + three_gen_family['tgt_parents']['Mother']['FullName'] + '</p></a></td><!--c1r7-->\n'
+                        + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid + '/index.html><p>' \
+                        + family_dict['parents']['mother']['FullName'] + '</p></a></td><!--c1r7-->\n'
             else:
                 hourglass_table['c1r7'] = '    <td align="center "><p>' \
-                        + three_gen_family['tgt_parents']['Mother']['FullName'] + '</p></td><!--c1r7-->\n'
+                        + family_dict['parents']['mother']['FullName'] + '</p></td><!--c1r7-->\n'
 
             if debug:
                 print('line 1284 - hourglass_table[c1r7] = ', hourglass_table['c1r7'])
 
             # c2r7 add arrow to select mother as new target
-            if os.path.isdir(folders_path + "/" + three_gen_family['tgt_parents']['Mother']["GenWebID"] + mothers_mother_genwebid):
+            if os.path.isdir(folders_path + "/" + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid):
                 hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "><a href= ../' \
-                                        + three_gen_family['tgt_parents']['Mother']["GenWebID"] + mothers_mother_genwebid \
+                                        + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid \
                                         + '/HourGlass.html><img src=../images/Left_Arrow.gif></a></td><!--c2r7-->\n'
             else:
                 hourglass_table['c2r7'] = '    <td align="center " bgcolor="maroon "></td><!--c2r7-->\n'
@@ -2262,11 +2092,11 @@ class build_web_pages(object):
         else:
             pass # don't add any content if mother doesn't exist
 
-        # Spouses
+# Spouses
         """
-        Given a person's PersonID (AKA OwnerID) fetch the NameTable entry for that
+        Given a person's PersonID (AKA OwnerID), the NameTable entry for that
         person.
-        The fetch_person_from_ID return is of the form spouse =
+        The form of spouse =
             [{'Surname': 'Page', 'OwnerID': '1', 'Nickname': 'Bob',
               'Suffix': '', 'BirthYear': '1949', 'Prefix': '',
               'DeathYear': '0', 'Sex':'male, 'GenWebID':'PageRobertK1949',
@@ -2274,14 +2104,13 @@ class build_web_pages(object):
               'FullName': 'Page, Robert Kenneth'}]
         spouses is a list of spouse NameTable entries
         """
-        spouseList = three_gen_family['spouseList']
+        spouseList = family_dict['spouses']
 
-        # spouses
         row = 6
         debug = False
-        if person_facts['OwnerID'] == '':
+        if long_genwebid == '':
             debug = True
-            print('person = ', person)
+        if debug:
             print('********* spouseList = ', spouseList)
             print('********* len(spouseList) = ', len(spouseList))
         for spouse_num in range(len(spouseList)):
@@ -2339,9 +2168,8 @@ class build_web_pages(object):
                     print('hourglass_table[' + key + '] = ', hourglass_table[key])
                 row = row + 1
 
-        #add children    ----left off here
-
-        childList = three_gen_family['childList']
+# children
+        childList = family_dict['children']
         """
         Given a person's PersonID (AKA OwnerID) fetch the children's NameTable
         entries for that person.
@@ -2356,9 +2184,9 @@ class build_web_pages(object):
 
         row = 2
         debug = False
-        if person_facts['OwnerID'] == '':
+        if long_genwebid == '-':
             debug = True
-            print('person = ', person)
+        if debug:
             print('********* childList = ', childList)
             print('********* len(childList) = ', len(childList))
         for child_num in range(len(childList)):
@@ -2375,37 +2203,24 @@ class build_web_pages(object):
 
             if child == {}:
                 continue
-            childs_Owner_ID = child['OwnerID']
 
-
-            childs_parents = rmagic.fetch_parents_from_ID(\
-                                        self._tables['PersonTable'],\
-                                        self._tables['NameTable'],\
-                                        self._tables['FamilyTable'],\
-                                        childs_Owner_ID)
-            childs_mothers_genwebid = childs_parents['Mother']['GenWebID']
-            # handle the case where the child's mother's name is incomplete
-            if childs_mothers_genwebid == '' or (not short_genwebid_re.match(childs_mothers_genwebid)): childs_mothers_genwebid = '-'
-
-
+            childs_long_genwebid = child['long_genwebid']
 
             # c9r2, 4, 6, 8, ... 20 target person picture
             if len(childList[child_num]) > 0:
                 key = 'c9r' + str(row)
                 if debug:
-                    print(folders_path + '/' + childList[child_num]['GenWebID'] + childs_mothers_genwebid + '/' + childList[child_num]['GenWebID'] + childs_mothers_genwebid + '.jpg')
-                if os.path.isfile(folders_path + '/' + childList[child_num]['GenWebID'] + childs_mothers_genwebid \
-                                    + '/' + childList[child_num]['GenWebID'] + childs_mothers_genwebid + '.jpg'):
+                    print(folders_path + '/' + childs_long_genwebid + '/' + childs_long_genwebid + '.jpg')
+                if os.path.isfile(folders_path + '/' + childs_long_genwebid \
+                                    + '/' + childs_long_genwebid + '.jpg'):
                     hourglass_table[key] = '    <td align="center "><img src="../' \
-                                            + childList[child_num]["GenWebID"] + childs_mothers_genwebid + '/' \
-                                            + childList[child_num]["GenWebID"] + childs_mothers_genwebid \
+                                            + childs_long_genwebid + '/' \
+                                            + childs_long_genwebid \
                                             + '.jpg" height="75"></td><!--' + key + '-->\n'
                     if debug:
                         print('hourglass_table[' + key + '] = ', hourglass_table[key])
                 else:
                     hourglass_table[key] = '    <td align="center "><img src="../images/silhouette.jpg" height="75"></td><!--' + key + '-->\n'
-
-
 
                 # c7r4, 6, 8, ... 20 add maroon cell
                 hourglass_table['c7r4'] = '    <td align="center " bgcolor="maroon "></td><!--c7r4-->\n'
@@ -2417,7 +2232,7 @@ class build_web_pages(object):
                 # c9r3, 5, 7, ... 19 target person name and link
                 key = 'c9r' + str(row)
                 hourglass_table[key] = '    <td align="center "><a href="../' \
-                        + childList[child_num]["GenWebID"] + childs_mothers_genwebid + '/index.html"><p>' \
+                        + childs_long_genwebid + '/index.html"><p>' \
                         + childList[child_num]["FullName"] + '</p></a></td><!--' + key + '-->\n'
 
                 # c6r3 is always blank
@@ -2438,7 +2253,7 @@ class build_web_pages(object):
                 # c8r4, 6, 8, ... 20 add arrow to select child as new target
                 key = 'c8r' + str(row)
                 hourglass_table[key] = '    <td align="center" bgcolor="maroon"><a href= ../' \
-                                        + childList[child_num]["GenWebID"] + childs_mothers_genwebid \
+                                        + childs_long_genwebid \
                                         + '/HourGlass.html><img src=../images/Right_Arrow.gif></a></td><!--' + key + '-->\n'
                 if debug:
                     print('hourglass_table[' + key + '] = ', hourglass_table[key])
@@ -2491,7 +2306,7 @@ class build_web_pages(object):
         hourglasshtmlList.append(buildString)
 
         if persons_mother == '': persons_mother = '-'
-        commentString = '\t\t\t<p><a href="mailto:pagerk@gmail.com?subject=' + person + persons_mother + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: left; margin-right: auto" height="20"></a>\n'
+        commentString = '\t\t\t<p><a href="mailto:pagerk@gmail.com?subject=' + long_genwebid + '" target="_blank"><img alt="comments" src="../images/comments.jpg" style="display: block; text-align: left; margin-right: auto" height="20"></a>\n'
         hourglasshtmlList.append(commentString)
 
         hourglasshtmlList.append('<table border="0" cellspacing="0" cellpadding="0" align="center">\n')
@@ -2505,8 +2320,8 @@ class build_web_pages(object):
         hourglasshtmlList.append('</body>')
         hourglasshtmlList.append('</html>')
 
-        if os.path.isdir(folders_path + '/' + person + persons_mother):
-            hourglassFile = open(folders_path + '/' + person + persons_mother + '/HourGlass.html', 'w')
+        if os.path.isdir(folders_path + '/' + long_genwebid):
+            hourglassFile = open(folders_path + '/' + long_genwebid + '/HourGlass.html', 'w')
 
             for row in hourglasshtmlList:
                 hourglassFile.writelines(row)
@@ -2515,7 +2330,7 @@ class build_web_pages(object):
         else:
 
             folder_not_found = open(folders_path + '/zzz_FolderNotFound.txt', 'a')
-            folder_not_found.write('***** _generate_all_hourglass_webs ****** folder = ' + person + persons_mother + '\n')
+            folder_not_found.write('***** _generate_all_hourglass_webs ****** folder = ' + long_genwebid + '\n')
             folder_not_found.write('person_facts[FullName] = ' + person_facts['FullName'] \
                               + '\n person_facts[BirthYear] = ' + person_facts['BirthYear'] \
                               + '\n person_facts[DeathYear] = ' + person_facts['DeathYear'] + '\n')

@@ -91,13 +91,14 @@ class build_web_pages(object):
         else:
             name_table_pkl_mod_time = 0
 
-        print('line 94 rmagic_mod_time = ', rmagic_mod_time)
-        print('line 95 name_table_pkl_mod_time = ', name_table_pkl_mod_time)
-        print('line 96 if rmagic_mod_time > name_table_pkl_mod_time then get rmagic tables')
-
         if rmagic_mod_time > name_table_pkl_mod_time:
+            files = glob.glob(dictionaries_path + '/*.pkl')
+            for f in files:
+                os.remove(f)
+            files = glob.glob(dictionaries_path + '/*.dic')
+            for f in files:
+                os.remove(f)
             for name_table_entry in self._tables['NameTable']:
-                #print('name_table_entry entry = ', str(name_table_entry))
                 if name_table_entry['IsPrimary'] == '0':
                     continue
 
@@ -105,8 +106,6 @@ class build_web_pages(object):
 
                 if revised_name_table_entry == {}:
                     continue
-
-                #print('revised_name_table_entry = ', str(revised_name_table_entry))
 
                 family_dict = self._get_family(revised_name_table_entry)
                 """
@@ -133,7 +132,7 @@ class build_web_pages(object):
                     'DeathYear'
                     'FullName'
                 """
-                if family_dict['target']['OwnerID'] == '17000':
+                if family_dict['target']['OwnerID'] == '':
                     print('line 137 - family_dict = ', family_dict)
                     print('line 138 - revised_name_table_entry = ', revised_name_table_entry)
 
@@ -268,7 +267,7 @@ class build_web_pages(object):
                 print("long_genwebid = ", long_genwebid, "  is not a valid key in families_dict")
                 continue
             if generate_web_pages and persons_xml_dict['artifacts_info'] != {}:
-                self._generate_person_web2(family_dict, persons_xml_dict, folders_path)
+                self._generate_person_web(family_dict, persons_xml_dict, folders_path)
 
             if generate_hourglass:  # this must come after generate_web_pages -
                                     # don't want hourglass if no web page
@@ -532,8 +531,7 @@ class build_web_pages(object):
                 if revised_spouse == {}: continue
                 revised_spouses.append(revised_spouse)
                 #print('revised_spouse = ', revised_spouse)
-        """
-        """
+
         # CHILDREN
         children = rmagic.fetch_children_from_ID(child_table, \
                                             name_table, person_table,\
@@ -1421,7 +1419,7 @@ class build_web_pages(object):
 
 #--------------------------------------------------
 
-    def _generate_person_web2(self, family_dict, persons_xml_dict, folders_path):
+    def _generate_person_web(self, family_dict, persons_xml_dict, folders_path):
         """
         This is the new version!
 
@@ -1759,10 +1757,10 @@ class build_web_pages(object):
         debug = False
         long_genwebid = family_dict['target']['long_genwebid']
 
-        if long_genwebid == '':
+        if long_genwebid == 'CoxSusan1785GreenleafSusanna1768':
             debug = True
 
-        if debug == True: print('line 2599 family_dict = ', family_dict)
+        if debug == True: print('line 1763 family_dict = ', family_dict)
 
         if long_genwebid == '' or long_genwebid == 'StoriesPersonal0000-':
             return
@@ -1886,7 +1884,7 @@ class build_web_pages(object):
             debug = True
 
         if debug:
-            print('_generate_all_hourglass_webs line 1185 - long_genwebid = ', long_genwebid)
+            print('_generate_all_hourglass_webs line 1887 - long_genwebid = ', long_genwebid)
             print('********* person_facts = ', person_facts)
             print('********* family_dict[parents] = ', \
                                 family_dict['parents'])
@@ -1925,7 +1923,7 @@ class build_web_pages(object):
         tgt_fathers_parents = {'Father': father, 'Mother': mother}
         """
         if debug:
-            print('_generate_all_hourglass_webs line 2789 - long_genwebid = ', long_genwebid)
+            print('_generate_all_hourglass_webs line 1926 - long_genwebid = ', long_genwebid)
             print('********* tgt_fathers_parents = ', tgt_fathers_parents)
 
         fathers_mother_genwebid = '-'
@@ -1953,7 +1951,7 @@ class build_web_pages(object):
                                         + fathers_mother_genwebid \
                                         + '.jpg" height="75"></td><!--c1r2-->\n'
             else:
-                if debug: print(folders_path + '/' + family_dict['parents']['father']['GenWebID'] \
+                if debug: print('line 1954 - ', folders_path + '/' + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid \
                                 + '/' + family_dict['parents']['father']['GenWebID'] \
                                 + fathers_mother_genwebid + '.jpg')
@@ -1998,7 +1996,7 @@ class build_web_pages(object):
             pass # don't add any content if father doesn't exist
 
         if debug:
-            print('_generate_all_hourglass_webs line 1255 - long_genwebid= ', long_genwebid)
+            print('_generate_all_hourglass_webs line 1999 - long_genwebid= ', long_genwebid)
             print('********* family_dict[parents] = ', family_dict['parents'])
             print('********* len(family_dict[parents]) = ', len(family_dict['parents']))
             print('********* three_gen_family = ', family_dict)
@@ -2067,7 +2065,7 @@ class build_web_pages(object):
                         + family_dict['parents']['mother']['FullName'] + '</p></td><!--c1r7-->\n'
 
             if debug:
-                print('line 1284 - hourglass_table[c1r7] = ', hourglass_table['c1r7'])
+                print('line 2068 - hourglass_table[c1r7] = ', hourglass_table['c1r7'])
 
             # c2r7 add arrow to select mother as new target
             if os.path.isdir(folders_path + "/" + family_dict['parents']['mother']["GenWebID"] + mothers_mother_genwebid):
@@ -2111,7 +2109,7 @@ class build_web_pages(object):
         if long_genwebid == '':
             debug = True
         if debug:
-            print('********* spouseList = ', spouseList)
+            print('line 2112 - ********* spouseList = ', spouseList)
             print('********* len(spouseList) = ', len(spouseList))
         for spouse_num in range(len(spouseList)):
             if debug:
@@ -2123,7 +2121,7 @@ class build_web_pages(object):
             if spouse == {}:
                 continue
 
-            if debug: print('_generate_all_hourglass_webs line 1345 - spouse_num = ', spouse_num, '       spouse = ', spouse)
+            if debug: print('_generate_all_hourglass_webs line 2124 - spouse_num = ', spouse_num, '       spouse = ', spouse)
 
             spouses_parents = rmagic.fetch_parents_from_ID(\
                                         self._tables['PersonTable'],\
@@ -2134,7 +2132,7 @@ class build_web_pages(object):
             # handle the case where the spouse's mother's name is incomplete
             if spouses_mothers_genwebid == '' or (not short_genwebid_re.match(spouses_mothers_genwebid)): spouses_mothers_genwebid = '-'
 
-            if debug: print('_generate_all_hourglass_webs line 1356 - spouses_mothers_genwebid = ', spouses_mothers_genwebid)
+            if debug: print('_generate_all_hourglass_webs line 2135 - spouses_mothers_genwebid = ', spouses_mothers_genwebid)
 
             # c5r6,8,10,12 target person picture
             if len(spouseList[spouse_num]) > 0:

@@ -960,12 +960,16 @@ class build_web_pages(object):
                     current folder = ', folder, \
                     '\n\t people_re.findall(folder) = ', \
                     people_re.findall(folder))
+            try:
             # if there is an error in the following line it is probably
             # caused my either and incomplete xml reference or an incorrect
             # folder name (not a long genwebid)
             # person_stuff of the form:
             #               ['PersondateMotherdate','Persondate','Motherdate']
-            person_stuff = people_re.findall(folder)[0]
+                person_stuff = people_re.findall(folder)[0]
+            except:
+                print('*** _get_proj_dict_from_xml line 969 folder either and incomplete xml reference or an incorrect folder name (not a long genwebid) folder = ', folder)
+                continue
             if len(person_stuff) == 0 or len(person_stuff[0]) < 3:
                 print('\n _get_proj_dict_from_xml line 179 long_genwebid = ', \
                     long_genwebid, '   person_stuff = ', person_stuff)
@@ -1757,7 +1761,7 @@ class build_web_pages(object):
         debug = False
         long_genwebid = family_dict['target']['long_genwebid']
 
-        if long_genwebid == 'CoxSusan1785GreenleafSusanna1768':
+        if long_genwebid == 'VintonAbel1784AdamsAnn1757':
             debug = True
 
         if debug == True: print('line 1763 family_dict = ', family_dict)
@@ -1811,7 +1815,7 @@ class build_web_pages(object):
                 hourglass_table[key] = \
                 '    <td align="center "></td><!--' + key + '-->\n'
 
-        if 'GenWebID' not in person_facts: # if person doesn't exist, return
+        if 'long_genwebid' not in person_facts: # if person doesn't exist, return
             f = open(folders_path + '/zzz_PeopleNotFound.txt', 'a')
             f.write('*****build_web_pages hourglass table row #1 ****** long_genwebid = \
                         ' + long_genwebid + '\n')
@@ -2106,7 +2110,7 @@ class build_web_pages(object):
 
         row = 6
         debug = False
-        if long_genwebid == '':
+        if long_genwebid == 'VintonAbel1784AdamsAnn1757':
             debug = True
         if debug:
             print('line 2112 - ********* spouseList = ', spouseList)
